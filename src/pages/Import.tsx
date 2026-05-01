@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Truck, CheckCircle, X, Trash2, Barcode, Printer, ArrowLeft, LayoutGrid, Eye, Info, ChevronDown, Edit2, ArrowRight, UserCircle, PieChart, FileText, Package } from 'lucide-react';
+import { Search, Plus, Truck, CheckCircle, X, Trash2, Barcode, Printer, ArrowLeft, LayoutGrid, Eye, Info, ChevronDown, Edit2, ArrowRight, UserCircle, PieChart, FileText, Package, Image as ImageIcon } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Product, ImportItem, Supplier, CashTransaction, ImportOrder } from '../types';
 import { formatNumber, parseFormattedNumber } from '../lib/utils';
+import { NumericFormat } from 'react-number-format';
 import { generateId } from '../lib/idUtils';
 import { PrintTemplate } from '../components/PrintTemplate';
+import { ProductDetailModal } from '../components/ProductDetailModal';
+import { useScrollLock } from '../hooks/useScrollLock';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 export const Import: React.FC = () => {
   const navigate = useNavigate();
-  const { products, suppliers, importOrders, cashTransactions, addImportOrder, addSupplier, updateProduct, addSerial, addCashTransaction, importDraft, setImportDraft, serials } = useAppContext();
+  const { products, suppliers, importOrders, cashTransactions, addImportOrder, addSupplier, updateProduct, addProduct, addSerial, addCashTransaction, importDraft, setImportDraft, serials, wallets } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  
+  useMobileBackModal(!!viewingProduct, () => setViewingProduct(null));
   
   const [cart, setCart] = useState<(ImportItem & { hasSerial?: boolean; serials?: string[]; unit?: string; discount?: number; note?: string })[]>(
     (Array.isArray(importDraft?.cart) ? importDraft.cart : []).map(item => ({
@@ -19,16 +27,25 @@ export const Import: React.FC = () => {
     }))
   );
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(importDraft?.selectedSupplier || null);
-  const [importCode, setImportCode] = useState('Mã phiếu tự động');
+  const [importCode, setImportCode] = useState(importDraft?.editingId || importDraft?.orderCode || 'Mã phiếu tự động');
   const [orderCode, setOrderCode] = useState('');
-  const [overallDiscount, setOverallDiscount] = useState(0);
-  const [returnCost, setReturnCost] = useState(0);
-  const [shippingFee, setShippingFee] = useState(0);
-  const [otherCost, setOtherCost] = useState(0);
-  const [note, setNote] = useState('');
+  const [overallDiscount, setOverallDiscount] = useState(importDraft?.overallDiscount || 0);
+  const [returnCost, setReturnCost] = useState(importDraft?.returnCost || 0);
+  const [shippingFee, setShippingFee] = useState(importDraft?.shippingFee || 0);
+  const [otherCost, setOtherCost] = useState(importDraft?.otherCost || 0);
+  const [note, setNote] = useState(importDraft?.note || '');
+
+  const [transactionDate, setTransactionDate] = useState(() => {
+    if (importDraft?.transactionDate) {
+      return importDraft.transactionDate;
+    }
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  });
   
   // Modals
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isMobileProductSearchOpen, setIsMobileProductSearchOpen] = useState(false);
   const [isMobileSupplierSearchOpen, setIsMobileSupplierSearchOpen] = useState(false);
   const [isMobileCheckoutOpen, setIsMobileCheckoutOpen] = useState(false);
@@ -39,19 +56,80 @@ export const Import: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState<{id: string, total: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDraftPrompt, setShowDraftPrompt] = useState(() => {
+    if (importDraft?.cart && importDraft.cart.length > 0 && !importDraft.isExplicitIntent) {
+      return true;
+    }
+    return false;
+  });
+
+  // Lock scroll when modals are open
+  useScrollLock(!!viewingProduct || isSupplierModalOpen || isProductModalOpen || isMobileProductSearchOpen || isMobileSupplierSearchOpen || isMobileCheckoutOpen || !!showSuccessModal || showConfirmModal || showDraftPrompt);
+
+  // New Product Form State
+  const [newName, setNewName] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [newCost, setNewCost] = useState('');
+  const [newUnit, setNewUnit] = useState('Cái');
+  const [newCategory, setNewCategory] = useState('');
+  const [newHasSerial, setNewHasSerial] = useState(false);
+
+  const hasProductModalChanges = () => {
+    return (
+      newName !== '' ||
+      newPrice !== '' ||
+      newCost !== '' ||
+      newUnit !== 'Cái' ||
+      newCategory !== '' ||
+      newHasSerial !== false
+    );
+  };
+
+  const handleCloseProductModal = () => {
+    if (hasProductModalChanges()) {
+      if (window.confirm('Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn đóng mà không lưu không?')) {
+        setIsProductModalOpen(false);
+        resetProductForm();
+      }
+    } else {
+      setIsProductModalOpen(false);
+      resetProductForm();
+    }
+  };
+
+  const resetProductForm = () => {
+    setNewName('');
+    setNewPrice('');
+    setNewCost('');
+    setNewUnit('');
+    setNewCategory('');
+    setNewHasSerial(false);
+  };
+
+  // Handle Escape key
+  useEscapeKey(() => setShowSuccessModal(null), !!showSuccessModal);
+  useEscapeKey(() => setShowConfirmModal(false), showConfirmModal);
+  useEscapeKey(() => setIsMobileCheckoutOpen(false), isMobileCheckoutOpen);
+  useEscapeKey(handleCloseProductModal, isProductModalOpen);
+  useEscapeKey(() => setIsSupplierModalOpen(false), isSupplierModalOpen);
+  useEscapeKey(() => setViewingProduct(null), !!viewingProduct);
 
   const [paidAmount, setPaidAmount] = useState<number>(importDraft?.paid as number || 0);
+  const [walletId, setWalletId] = useState<string>(importDraft?.walletId || '');
 
   useEffect(() => {
+    if (showDraftPrompt) return; // Don't sync draft while prompt is open
+
     // Only update draft if values actually changed to avoid unnecessary re-renders
     if (
       importDraft?.cart !== cart || 
       importDraft?.selectedSupplier !== selectedSupplier || 
-      importDraft?.paid !== paidAmount
+      importDraft?.paid !== paidAmount ||
+      importDraft?.walletId !== walletId
     ) {
-      setImportDraft({ cart, selectedSupplier, paid: paidAmount });
+      setImportDraft({ ...importDraft, cart, selectedSupplier, paid: paidAmount, walletId });
     }
-  }, [cart, selectedSupplier, paidAmount, setImportDraft, importDraft]);
+  }, [cart, selectedSupplier, paidAmount, walletId, setImportDraft, importDraft, showDraftPrompt]);
 
   const totalGoods = cart.reduce((sum, item) => sum + (item.price * item.qty) - (item.discount || 0), 0);
   const finalTotal = totalGoods - overallDiscount + returnCost + otherCost + shippingFee;
@@ -68,17 +146,21 @@ export const Import: React.FC = () => {
   const [supplierSuggestions, setSupplierSuggestions] = useState<Supplier[]>([]);
 
   useEffect(() => {
-    if (searchTerm.trim()) {
-      const filtered = (products || []).filter(p => 
-        !p.isService && (
-          (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-          (p.id || '').toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-      setProductSuggestions(filtered);
-    } else {
-      setProductSuggestions([]);
-    }
+    const handler = setTimeout(() => {
+      if (searchTerm.trim()) {
+        const filtered = (products || []).filter(p => 
+          !p.isService && (
+            (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (p.id || '').toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        );
+        setProductSuggestions(filtered.slice(0, 30));
+      } else {
+        setProductSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
   }, [searchTerm, products]);
 
   const handleSupplierSearch = (val: string) => {
@@ -118,7 +200,7 @@ export const Import: React.FC = () => {
   };
 
   const updateQty = (id: string, qty: number) => {
-    const product = products.find(p => p.id === id);
+    const product = (products || []).find(p => p.id === id);
     if (product?.hasSerial) return;
     if (qty < 0) return;
     setCart(prev => prev.map(item => item.id === id ? { ...item, qty } : item));
@@ -146,7 +228,7 @@ export const Import: React.FC = () => {
     const upperSn = sn.toUpperCase();
     
     // Check if serial already exists in the system
-    const existingSerial = serials?.find(s => s.sn.toUpperCase() === upperSn);
+    const existingSerial = serials?.find(s => (s.sn || '').toUpperCase() === upperSn);
     if (existingSerial) {
       alert(`Mã serial ${upperSn} đã tồn tại trong hệ thống!`);
       return;
@@ -184,6 +266,9 @@ export const Import: React.FC = () => {
   const handleImportClick = () => {
     if (cart.length === 0) return alert('Phiếu nhập trống!');
     if (!selectedSupplier) return alert('Vui lòng chọn nhà cung cấp!');
+    if (paidAmount > 0 && !walletId) {
+      return alert('Vui lòng chọn ví thanh toán!');
+    }
     
     for (let item of cart) {
       if (item.hasSerial && item.qty === 0) {
@@ -199,9 +284,14 @@ export const Import: React.FC = () => {
     setShowConfirmModal(false);
 
     try {
-      const now = new Date();
-      const importId = importCode === 'Mã phiếu tự động' ? generateId('NH', importOrders) : importCode;
-      const dateStr = now.toLocaleString('vi-VN');
+      const [y, m, d, hh, min] = transactionDate.split(/[-T:]/);
+      const dateStr = `${hh}:${min}:00 ${d}/${m}/${y}`;
+      const now = new Date(`${y}-${m}-${d}T${hh}:${min}:00`);
+
+      const isEdit = !!importDraft?.editingId;
+      const importId = isEdit ? importDraft.editingId as string : (importCode === 'Mã phiếu tự động' ? generateId('NH', importOrders) : importCode);
+
+      const isActuallyUpdate = isEdit || importOrders.some(o => o.id === importId);
 
       const order: ImportOrder = {
         id: importId,
@@ -223,20 +313,87 @@ export const Import: React.FC = () => {
         returnCost: returnCost,
         shippingFee: shippingFee,
         otherCost: otherCost,
-        note: note
+        note: note,
+        walletId: walletId || undefined
       };
 
-      // Update stock and add serials/stock cards
-      for (const item of cart) {
-        const p = products.find(x => x.id === item.id);
-        if (p) {
-          updateProduct(item.id, { 
-            stock: (p.stock || 0) + item.qty,
-            importPrice: item.price 
-          }, true);
+      if (isActuallyUpdate) {
+        // Update existing order
+        await addImportOrder(order);
+        
+        // Also check if they added a payment amount but no previous cash transaction existed
+        const existingTx = cashTransactions.find(t => t.refId === importId && t.category === 'IMPORT_PAYMENT');
+        if (!existingTx && order.paid > 0) {
+          const transactionId = generateId('PC', cashTransactions);
+          addCashTransaction({
+            id: transactionId,
+            date: dateStr,
+            type: 'PAYMENT',
+            amount: order.paid,
+            category: 'IMPORT_PAYMENT',
+            partner: selectedSupplier.name,
+            note: `Thanh toán phiếu nhập ${importId}`,
+            refId: importId,
+            walletId: walletId || undefined
+          });
+        }
+      } else {
+        await addImportOrder(order);
+
+        // Record Cash Transaction if paidAmount > 0
+        if (order.paid > 0) {
+          const transactionId = generateId('PC', cashTransactions);
+          const newTransaction: CashTransaction = {
+            id: transactionId,
+            date: dateStr,
+            type: 'PAYMENT',
+            amount: order.paid,
+            category: 'IMPORT_PAYMENT',
+            partner: selectedSupplier.name,
+            note: `Thanh toán phiếu nhập ${importId}`,
+            refId: importId,
+            walletId: walletId || undefined
+          };
+          addCashTransaction(newTransaction);
           
-          if (item.hasSerial && item.serials) {
-            for (const sn of item.serials) {
+          if (shippingFee > 0) {
+            const shipTransactionId = generateId('PC', [...cashTransactions, newTransaction]);
+            const shipTransaction: CashTransaction = {
+              id: shipTransactionId,
+              date: dateStr,
+              type: 'PAYMENT',
+              amount: shippingFee,
+              category: 'OTHER',
+              partner: selectedSupplier.name,
+              note: `Phí vận chuyển phiếu nhập ${importId}`,
+              refId: importId,
+              walletId: walletId || undefined
+            };
+            addCashTransaction(shipTransaction);
+          }
+        } else if (shippingFee > 0) {
+          const shipTransactionId = generateId('PC', cashTransactions);
+          const shipTransaction: CashTransaction = {
+            id: shipTransactionId,
+            date: dateStr,
+            type: 'PAYMENT',
+            amount: shippingFee,
+            category: 'OTHER',
+            partner: selectedSupplier.name,
+            note: `Phí vận chuyển phiếu nhập ${importId}`,
+            refId: importId,
+            walletId: walletId || undefined
+          };
+          addCashTransaction(shipTransaction);
+        }
+      }
+
+      // Add missing serials regardless of create or edit
+      for (const item of cart) {
+        if (item.hasSerial && item.serials) {
+          for (const sn of item.serials) {
+            const exists = (serials || []).find(s => s.sn === sn);
+            if (!exists) {
               addSerial({
                 prodId: item.id,
                 sn,
@@ -250,51 +407,6 @@ export const Import: React.FC = () => {
         }
       }
 
-      // Record Cash Transaction if paidAmount > 0
-      if (order.paid > 0) {
-        const transactionId = generateId('PC', cashTransactions);
-        const newTransaction: CashTransaction = {
-          id: transactionId,
-          date: dateStr,
-          type: 'PAYMENT',
-          amount: order.paid,
-          category: 'IMPORT_PAYMENT',
-          partner: selectedSupplier.name,
-          note: `Thanh toán phiếu nhập ${importId}`,
-          refId: importId
-        };
-        addCashTransaction(newTransaction);
-        
-        if (shippingFee > 0) {
-          const shipTransactionId = generateId('PC', [...cashTransactions, newTransaction]);
-          const shipTransaction: CashTransaction = {
-            id: shipTransactionId,
-            date: dateStr,
-            type: 'PAYMENT',
-            amount: shippingFee,
-            category: 'OTHER',
-            partner: selectedSupplier.name,
-            note: `Phí vận chuyển phiếu nhập ${importId}`,
-            refId: importId
-          };
-          addCashTransaction(shipTransaction);
-        }
-      } else if (shippingFee > 0) {
-        const shipTransactionId = generateId('PC', cashTransactions);
-        const shipTransaction: CashTransaction = {
-          id: shipTransactionId,
-          date: dateStr,
-          type: 'PAYMENT',
-          amount: shippingFee,
-          category: 'OTHER',
-          partner: selectedSupplier.name,
-          note: `Phí vận chuyển phiếu nhập ${importId}`,
-          refId: importId
-        };
-        addCashTransaction(shipTransaction);
-      }
-
-      await addImportOrder(order);
       setCart([]);
       setSelectedSupplier(null);
       setPaidAmount(0);
@@ -319,7 +431,7 @@ export const Import: React.FC = () => {
 
   return (
     <>
-      <div className="h-full flex flex-col lg:flex-row bg-slate-50 print:bg-white relative overflow-hidden">
+      <div className="flex flex-col lg:flex-row bg-slate-50 print:bg-white relative">
       {/* Print Template Container */}
       {printData && <PrintTemplate {...printData} />}
 
@@ -335,7 +447,7 @@ export const Import: React.FC = () => {
             <div className="flex flex-col gap-3">
               <button 
                 onClick={() => {
-                  const order = importOrders.find(o => o.id === showSuccessModal.id);
+                  const order = (importOrders || []).find(o => o.id === showSuccessModal.id);
                   if (order) {
                     handlePrint({
                       title: 'PHIẾU NHẬP HÀNG',
@@ -396,29 +508,64 @@ export const Import: React.FC = () => {
                 type="text" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchTerm.trim() !== '' && productSuggestions.length === 0) {
+                    resetProductForm();
+                    setIsProductModalOpen(true);
+                    setProductSuggestions([]);
+                  } else if (e.key === 'Enter' && productSuggestions.length === 1) {
+                    addToCart(productSuggestions[0]);
+                    setSearchTerm('');
+                    setProductSuggestions([]);
+                  }
+                }}
                 placeholder="Tìm hàng (F3)" 
                 className="flex-1 bg-transparent text-sm outline-none font-medium"
               />
               <div className="flex items-center gap-1 md:gap-2">
                 <LayoutGrid size={18} className="text-slate-400 cursor-pointer hover:text-slate-600 hidden sm:block" />
-                <Plus size={18} className="text-slate-400 cursor-pointer hover:text-slate-600" />
+                <Plus onClick={() => {
+                  resetProductForm();
+                  setIsProductModalOpen(true);
+                }} size={18} className="text-slate-400 cursor-pointer hover:text-slate-600" />
               </div>
             </div>
-            {productSuggestions.length > 0 && (
+            {(productSuggestions.length > 0 || (searchTerm.trim() !== '' && productSuggestions.length === 0)) && (
               <div className="absolute top-full left-0 right-0 z-[60] bg-white border border-slate-200 rounded-lg shadow-2xl mt-1 max-h-[400px] overflow-y-auto">
                 {productSuggestions.map(p => (
                   <div 
                     key={p.id} 
                     onClick={() => addToCart(p)}
-                    className="p-4 border-b border-slate-50 hover:bg-blue-50 flex justify-between items-center cursor-pointer transition-colors"
+                    className="p-3 border-b border-slate-50 hover:bg-blue-50 flex gap-3 items-center cursor-pointer transition-colors"
                   >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">{p.name}</p>
-                      <p className="text-xs text-slate-400 font-medium mt-1">Mã: {p.id} | Tồn: {p.stock}</p>
+                    <div className="w-10 h-10 rounded border border-slate-100 bg-slate-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <ImageIcon size={18} className="text-slate-300" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{p.name}</p>
+                      <p className="text-xs text-slate-400 font-medium mt-0.5">Mã: {p.id} | Tồn: {p.stock}</p>
                     </div>
                     {p.hasSerial && <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-bold">Serial</span>}
                   </div>
                 ))}
+                {searchTerm.trim() !== '' && (
+                  <div className="p-3 bg-slate-50 border-t border-slate-100">
+                    <button 
+                      onClick={() => {
+                        resetProductForm();
+                        setIsProductModalOpen(true);
+                        setProductSuggestions([]);
+                      }}
+                      className="w-full py-3 px-3 flex items-center justify-center gap-2 text-blue-600 bg-white border border-blue-200 rounded-xl hover:bg-blue-50 transition-all text-sm font-bold shadow-sm active:scale-[0.98]"
+                    >
+                      <Plus size={18} /> Thêm sản phẩm mới "{searchTerm}"
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -491,12 +638,26 @@ export const Import: React.FC = () => {
                         </button>
                       </td>
                       <td className="p-3 text-sm text-slate-600 font-medium">{index + 1}</td>
-                      <td className="p-3 text-sm text-blue-600 font-semibold cursor-pointer hover:underline">{item.id}</td>
+                      <td className="p-3 text-sm text-blue-600 font-semibold cursor-pointer hover:underline" onClick={() => {
+                        const p = (products || []).find(prod => prod.id === item.id);
+                        if (p) setViewingProduct(p);
+                      }}>{item.id}</td>
                       <td className="p-3">
-                        <p className="text-sm font-semibold text-slate-800">{item.name}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="text-[10px] text-slate-400 italic">Ghi chú...</span>
-                          <Edit2 size={10} className="text-slate-300 cursor-pointer hover:text-slate-500" />
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded border border-slate-100 bg-slate-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                            {(products || []).find(p => p.id === item.id)?.image ? (
+                              <img src={(products || []).find(p => p.id === item.id)?.image} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <ImageIcon size={14} className="text-slate-300" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">{item.name}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="text-[10px] text-slate-400 italic">Ghi chú...</span>
+                              <Edit2 size={10} className="text-slate-300 cursor-pointer hover:text-slate-500" />
+                            </div>
+                          </div>
                         </div>
                       </td>
                       <td className="p-3 text-center text-sm text-blue-600 font-medium">{item.unit}</td>
@@ -510,18 +671,20 @@ export const Import: React.FC = () => {
                         />
                       </td>
                       <td className="p-3">
-                        <input 
-                          type="text" 
-                          value={formatNumber(item.price)}
-                          onChange={(e) => updatePrice(item.id, parseFormattedNumber(e.target.value))}
+                        <NumericFormat 
+                          value={item.price}
+                          onValueChange={(values) => updatePrice(item.id, values.floatValue || 0)}
+                          thousandSeparator="."
+                          decimalSeparator=","
                           className="w-full text-center border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-semibold outline-none focus:border-blue-500"
                         />
                       </td>
                       <td className="p-3">
-                        <input 
-                          type="text" 
-                          value={formatNumber(item.discount || 0)}
-                          onChange={(e) => updateItemDiscount(item.id, parseFormattedNumber(e.target.value))}
+                        <NumericFormat 
+                          value={item.discount}
+                          onValueChange={(values) => updateItemDiscount(item.id, values.floatValue || 0)}
+                          thousandSeparator="."
+                          decimalSeparator=","
                           className="w-full text-center border border-slate-200 rounded-lg px-2 py-1.5 text-sm font-semibold outline-none focus:border-blue-500"
                         />
                       </td>
@@ -530,38 +693,40 @@ export const Import: React.FC = () => {
                       </td>
                     </tr>
                     {/* Serial Input Row */}
-                    <tr className="border-b border-slate-100 bg-slate-50/30">
-                      <td className="p-0"></td>
-                      <td className="p-0"></td>
-                      <td className="p-0"></td>
-                      <td colSpan={6} className="p-3">
-                        <div className="flex flex-col gap-2">
-                          <div className="relative max-w-md">
-                            <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                            <input 
-                              type="text" 
-                              placeholder="Nhập số Serial/Imei" 
-                              className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs outline-none focus:border-blue-400 font-medium"
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  addSerialToItem(item.id, (e.target as HTMLInputElement).value);
-                                  (e.target as HTMLInputElement).value = '';
-                                }
-                              }}
-                            />
-                          </div>
-                          {item.serials && item.serials.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
-                              {(item.serials || []).map((sn, sIdx) => (
-                                <span key={`${sn}-${sIdx}`} className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1.5 border border-blue-100">
-                                  {sn} <X size={10} className="cursor-pointer hover:text-red-500" onClick={() => removeSerialFromItem(item.id, sn)} />
-                                </span>
-                              ))}
+                    {item.hasSerial && (
+                      <tr className="border-b border-slate-100 bg-slate-50/30 font-bold">
+                        <td className="p-0"></td>
+                        <td className="p-0"></td>
+                        <td className="p-0"></td>
+                        <td colSpan={6} className="p-3">
+                          <div className="flex flex-col gap-2">
+                            <div className="relative max-w-sm">
+                              <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                              <input 
+                                type="text" 
+                                placeholder="Nhập số Serial/Imei" 
+                                className="w-full bg-white border border-indigo-200 rounded-lg pl-9 pr-3 py-1.5 text-xs outline-none focus:border-indigo-400 font-medium shadow-sm transition-all"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    addSerialToItem(item.id, (e.target as HTMLInputElement).value);
+                                    (e.target as HTMLInputElement).value = '';
+                                  }
+                                }}
+                              />
                             </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                            {item.serials && item.serials.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {(item.serials || []).map((sn, sIdx) => (
+                                  <span key={`${sn}-${sIdx}`} className="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1.5 border border-indigo-100 animate-in zoom-in duration-200">
+                                    {sn} <X size={10} className="cursor-pointer hover:text-red-500" onClick={() => removeSerialFromItem(item.id, sn)} />
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </React.Fragment>
                 ))
               )}
@@ -583,11 +748,15 @@ export const Import: React.FC = () => {
               </div>
             ) : (
               cart.map((item, index) => {
-                const product = products.find(p => p.id === item.id);
+                const product = (products || []).find(p => p.id === item.id);
                 return (
                   <div key={item.id} className="p-4 flex gap-3">
-                    <div className="w-16 h-16 bg-slate-100 rounded-lg shrink-0 flex items-center justify-center">
-                      <Package size={24} className="text-slate-400" />
+                    <div className="w-16 h-16 bg-slate-100 rounded-lg shrink-0 flex items-center justify-center overflow-hidden">
+                      {product?.image ? (
+                        <img src={product.image} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <Package size={24} className="text-slate-400" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
@@ -766,6 +935,15 @@ export const Import: React.FC = () => {
         {/* Summary Fields */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-slate-600">Thời gian</span>
+            <input 
+              type="datetime-local"
+              value={transactionDate}
+              onChange={(e) => setTransactionDate(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs font-bold outline-none focus:border-blue-500"
+            />
+          </div>
+          <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-slate-600">Mã phiếu nhập</span>
             <input 
               type="text" 
@@ -794,28 +972,31 @@ export const Import: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-slate-600">Giảm giá</span>
-              <input 
-                type="text" 
-                value={formatNumber(overallDiscount)}
-                onChange={(e) => setOverallDiscount(parseFormattedNumber(e.target.value))}
+              <NumericFormat 
+                value={overallDiscount}
+                onValueChange={(values) => setOverallDiscount(values.floatValue || 0)}
+                thousandSeparator="."
+                decimalSeparator=","
                 className="w-32 text-right border border-slate-200 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold outline-none focus:border-blue-500" 
               />
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-slate-600">Chi phí nhập trả NCC</span>
-              <input 
-                type="text" 
-                value={formatNumber(returnCost)}
-                onChange={(e) => setReturnCost(parseFormattedNumber(e.target.value))}
+              <NumericFormat 
+                value={returnCost}
+                onValueChange={(values) => setReturnCost(values.floatValue || 0)}
+                thousandSeparator="."
+                decimalSeparator=","
                 className="w-32 text-right border border-slate-200 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold outline-none focus:border-blue-500 text-blue-600" 
               />
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-slate-600">Phí vận chuyển</span>
-              <input 
-                type="text" 
-                value={formatNumber(shippingFee)}
-                onChange={(e) => setShippingFee(parseFormattedNumber(e.target.value))}
+              <NumericFormat 
+                value={shippingFee}
+                onValueChange={(values) => setShippingFee(values.floatValue || 0)}
+                thousandSeparator="."
+                decimalSeparator=","
                 className="w-32 text-right border border-slate-200 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold outline-none focus:border-blue-500 text-orange-600" 
               />
             </div>
@@ -823,15 +1004,44 @@ export const Import: React.FC = () => {
               <span className="text-sm font-bold text-slate-800">Cần trả nhà cung cấp</span>
               <span className="text-base font-bold text-blue-600">{formatNumber(finalTotal)}</span>
             </div>
+            {/* Wallets */}
+            <div className="flex flex-wrap gap-2 py-2">
+              <span className="text-xs font-bold text-slate-500 block w-full">Ví / Ngân hàng thanh toán:</span>
+              {wallets.length === 0 && (
+                <span className="text-xs text-rose-500 italic">Vui lòng thiết lập ví trong Cài đặt</span>
+              )}
+              {wallets.map((w, idx) => (
+                <label key={`${w.id}-${idx}`} className="flex items-center gap-2 cursor-pointer group px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">
+                  <input 
+                    type="radio" 
+                    name="walletId" 
+                    checked={walletId === w.id} 
+                    onChange={() => setWalletId(w.id)}
+                    className="w-3.5 h-3.5 text-blue-600 accent-blue-600"
+                  />
+                  <span className={`text-xs font-bold ${walletId === w.id ? 'text-blue-700' : 'text-slate-600'}`}>
+                    {w.name}
+                  </span>
+                </label>
+              ))}
+            </div>
+
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-slate-600">Đã thanh toán</span>
-              <input 
-                type="text" 
-                value={formatNumber(paidAmount)}
-                onChange={(e) => setPaidAmount(parseFormattedNumber(e.target.value))}
-                className="w-32 text-right border border-slate-200 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold outline-none focus:border-blue-500" 
-              />
+              {walletId ? (
+                <NumericFormat 
+                  value={paidAmount}
+                  onValueChange={(values) => setPaidAmount(values.floatValue || 0)}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  className="w-32 text-right border border-slate-200 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold outline-none focus:border-blue-500" 
+                  placeholder="0"
+                />
+              ) : (
+                <span className="text-xs font-medium text-rose-500 italic">Vui lòng chọn ví</span>
+              )}
             </div>
+            
             <div className="flex justify-between items-center pt-2 border-t border-slate-100">
               <span className="text-sm font-bold text-red-600">Còn nợ NCC</span>
               <span className="text-base font-bold text-red-600">{formatNumber(finalTotal - paidAmount)}</span>
@@ -899,13 +1109,41 @@ export const Import: React.FC = () => {
                 autoFocus
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchTerm.trim() !== '' && productSuggestions.length === 0) {
+                    resetProductForm();
+                    setIsProductModalOpen(true);
+                    setIsMobileProductSearchOpen(false);
+                    setProductSuggestions([]);
+                  } else if (e.key === 'Enter' && productSuggestions.length === 1) {
+                    addToCart(productSuggestions[0]);
+                    setIsMobileProductSearchOpen(false);
+                    setSearchTerm('');
+                    setProductSuggestions([]);
+                  }
+                }}
                 placeholder="Tên, mã hàng, mã vạch..." 
                 className="bg-transparent border-none outline-none flex-1 ml-2 text-sm font-medium" 
               />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {(searchTerm.trim() ? productSuggestions : products.filter(p => !p.isService)).map(p => (
+            {searchTerm.trim() !== '' && productSuggestions.length === 0 && (
+              <div className="p-8 text-center bg-blue-50/30">
+                <p className="text-sm text-slate-500 mb-6 font-medium">Không tìm thấy sản phẩm "{searchTerm}"</p>
+                <button 
+                  onClick={() => {
+                    resetProductForm();
+                    setIsProductModalOpen(true);
+                    setIsMobileProductSearchOpen(false);
+                  }}
+                  className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-100 active:scale-95 transition-all text-sm uppercase tracking-widest"
+                >
+                  <Plus size={20} /> Tạo mới hàng hóa này
+                </button>
+              </div>
+            )}
+            {(searchTerm.trim() ? productSuggestions : (products || []).filter(p => !p.isService)).map(p => (
               <div 
                 key={p.id} 
                 onClick={() => {
@@ -953,8 +1191,8 @@ export const Import: React.FC = () => {
           </div>
           <div className="flex-1 overflow-y-auto">
             {(mobileSupplierSearchTerm.trim() 
-              ? suppliers.filter(s => s.name.toLowerCase().includes(mobileSupplierSearchTerm.toLowerCase()) || s.phone.includes(mobileSupplierSearchTerm))
-              : suppliers
+              ? (suppliers || []).filter(s => (s.name || '').toLowerCase().includes(mobileSupplierSearchTerm.toLowerCase()) || (s.phone || '').includes(mobileSupplierSearchTerm))
+              : (suppliers || [])
             ).map(s => (
               <div 
                 key={s.phone} 
@@ -997,7 +1235,16 @@ export const Import: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white p-4 space-y-5 shadow-sm">
+            <div className="bg-white p-4 space-y-4 shadow-sm">
+              <div className="flex justify-between items-center sm:hidden">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Thời gian</span>
+                <input 
+                  type="datetime-local"
+                  value={transactionDate}
+                  onChange={(e) => setTransactionDate(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] font-bold outline-none focus:border-blue-400"
+                />
+              </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-slate-800">Tổng tiền hàng</span>
@@ -1008,10 +1255,11 @@ export const Import: React.FC = () => {
               
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                 <span className="text-sm font-bold text-slate-800">Giảm giá</span>
-                <input 
-                  type="text" 
-                  value={formatNumber(overallDiscount)} 
-                  onChange={(e) => setOverallDiscount(parseFormattedNumber(e.target.value))}
+                <NumericFormat 
+                  value={overallDiscount}
+                  onValueChange={(values) => setOverallDiscount(values.floatValue || 0)}
+                  thousandSeparator="."
+                  decimalSeparator=","
                   className="w-24 text-right bg-transparent text-sm font-bold outline-none text-slate-800" 
                   placeholder="0"
                 />
@@ -1022,15 +1270,42 @@ export const Import: React.FC = () => {
                 <span className="text-lg font-bold text-blue-600">{formatNumber(finalTotal)}</span>
               </div>
 
+              {/* Wallets */}
+              <div>
+                <span className="text-xs font-bold text-slate-500 mb-2 block">Ví thanh toán:</span>
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                   {wallets.length === 0 && (
+                     <span className="text-xs text-rose-500 italic px-2">Vui lòng thiết lập ví trong Cài đặt</span>
+                   )}
+                   {wallets.map((w, idx) => {
+                     const isSelected = walletId === w.id;
+                     return (
+                       <button 
+                         key={`${w.id}-${idx}`}
+                         onClick={() => setWalletId(w.id)}
+                         className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors border ${isSelected ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-slate-100 text-slate-600 border-transparent'}`}
+                       >
+                         {w.name}
+                       </button>
+                     );
+                   })}
+                </div>
+              </div>
+
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                 <span className="text-sm font-bold text-slate-800">Tiền trả NCC</span>
-                <input 
-                  type="text" 
-                  value={formatNumber(paidAmount)}
-                  onChange={(e) => setPaidAmount(parseFormattedNumber(e.target.value))}
-                  className="w-32 text-right bg-transparent text-lg font-bold text-slate-800 outline-none" 
-                  placeholder="0"
-                />
+                {walletId ? (
+                  <NumericFormat 
+                    value={paidAmount}
+                    onValueChange={(values) => setPaidAmount(values.floatValue || 0)}
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    className="w-32 text-right bg-transparent text-lg font-bold text-slate-800 outline-none" 
+                    placeholder="0"
+                  />
+                ) : (
+                  <span className="text-xs font-medium text-rose-500 italic">Chọn ví</span>
+                )}
               </div>
             </div>
           </div>
@@ -1045,6 +1320,150 @@ export const Import: React.FC = () => {
             >
               Hoàn thành
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Product Detail Modal */}
+      {viewingProduct && (
+        <ProductDetailModal 
+          product={viewingProduct} 
+          onClose={() => setViewingProduct(null)} 
+          onRefClick={(refId) => {
+            setViewingProduct(null);
+            if (refId.startsWith('NH')) {
+              navigate('/import-history');
+            } else if (refId.startsWith('HD')) {
+              navigate('/invoices');
+            }
+          }}
+        />
+      )}
+
+      {/* New Product Modal */}
+      {isProductModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-200">
+            <div className="p-6 border-b border-slate-100 bg-slate-50">
+              <h3 className="text-xl font-bold text-slate-800 leading-tight">Thêm sản phẩm mới</h3>
+              <p className="text-xs text-slate-500 font-medium mt-1">Tạo nhanh sản phẩm khi nhập hàng</p>
+              <button 
+                onClick={handleCloseProductModal}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-slate-600 border border-slate-100 shadow-sm transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên sản phẩm *</label>
+                <input 
+                  type="text" 
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Nhập tên sản phẩm..."
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá nhập (vốn)</label>
+                  <NumericFormat 
+                    value={newCost}
+                    onValueChange={(v) => setNewCost(v.value)}
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    placeholder="0"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá bán ra *</label>
+                  <NumericFormat 
+                    value={newPrice}
+                    onValueChange={(v) => setNewPrice(v.value)}
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    placeholder="0"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Đơn vị tính</label>
+                  <input 
+                    type="text" 
+                    value={newUnit}
+                    onChange={(e) => setNewUnit(e.target.value)}
+                    placeholder="Cái, Bộ, Mét..."
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Danh mục</label>
+                  <input 
+                    type="text" 
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="Nhóm sản phẩm..."
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                  />
+                </div>
+              </div>
+              <div className="pt-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={newHasSerial}
+                      onChange={(e) => setNewHasSerial(e.target.checked)}
+                    />
+                    <div className="w-12 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 transition-all"></div>
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-6 shadow-sm"></div>
+                  </div>
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">Quản lý theo mã Serial / Imei</span>
+                </label>
+              </div>
+            </div>
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
+              <button 
+                onClick={handleCloseProductModal}
+                className="flex-1 py-3 bg-white text-slate-600 border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm"
+              >
+                Hủy
+              </button>
+              <button 
+                onClick={() => {
+                  if (!newName || !newPrice) return alert('Vui lòng nhập đủ tên và giá bán!');
+                  
+                  const colors = ['bg-blue-600', 'bg-indigo-600', 'bg-purple-600', 'bg-emerald-500', 'bg-rose-500'];
+                  const id = generateId('SP', products);
+                  const newProd: Product = {
+                    id,
+                    name: newName,
+                    price: parseFormattedNumber(newPrice),
+                    importPrice: parseFormattedNumber(newCost) || 0,
+                    stock: 0,
+                    hasSerial: newHasSerial,
+                    color: colors[products.length % colors.length],
+                    unit: newUnit,
+                    category: newCategory,
+                    isService: false
+                  };
+                  
+                  addProduct(newProd);
+                  addToCart(newProd);
+                  setIsProductModalOpen(false);
+                  resetProductForm();
+                  setSearchTerm('');
+                }}
+                className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+              >
+                Lưu & Thêm vào phiếu
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1073,26 +1492,36 @@ export const Import: React.FC = () => {
                   placeholder="Nhập số điện thoại..." 
                 />
               </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Địa chỉ</label>
+                <input 
+                  id="new-sup-address"
+                  type="text" 
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white transition-all mt-1" 
+                  placeholder="Nhập địa chỉ..." 
+                />
+              </div>
               <div className="flex flex-col gap-2 pt-4">
                 <button 
                   onClick={() => {
                     const name = (document.getElementById('new-sup-name') as HTMLInputElement).value;
                     const phone = (document.getElementById('new-sup-phone') as HTMLInputElement).value;
+                    const address = (document.getElementById('new-sup-address') as HTMLInputElement)?.value || '';
                     if (name && phone) {
-                      addSupplier({ name, phone });
-                      setSelectedSupplier({ name, phone });
+                      addSupplier({ name, phone, address });
+                      setSelectedSupplier({ name, phone, address, id: 'temp', totalBuy: 0, totalDebt: 0 });
                       setIsSupplierModalOpen(false);
                     }
                   }}
-                  className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-md shadow-blue-200 text-sm active:scale-95 transition-all hover:bg-blue-700"
+                  className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold shadow-md shadow-emerald-200 text-sm active:scale-95 transition-all hover:bg-emerald-700"
                 >
-                  Lưu thông tin
+                  Lưu
                 </button>
                 <button 
                   onClick={() => setIsSupplierModalOpen(false)}
-                  className="w-full bg-slate-100 text-slate-600 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
+                  className="w-full bg-[#991b1b] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#7f1d1d] transition-all shadow-md shadow-red-100"
                 >
-                  Hủy
+                  Đóng
                 </button>
               </div>
             </div>
@@ -1122,6 +1551,46 @@ export const Import: React.FC = () => {
                   className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-200"
                 >
                   {isSubmitting ? 'Đang xử lý...' : 'Đồng ý'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Draft Prompt Modal */}
+      {showDraftPrompt && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText size={32} />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-2">Đơn nhập chưa hoàn thành</h3>
+              <p className="text-slate-500 text-sm mb-6">Bạn có đơn nhập hàng đang tạo dở. Bạn có muốn tiếp tục hay tạo một đơn mới?</p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => {
+                    setCart([]);
+                    setSelectedSupplier(null);
+                    setPaidAmount(0);
+                    setImportDraft(undefined);
+                    setShowDraftPrompt(false);
+                  }}
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                >
+                  Tạo mới
+                </button>
+                <button 
+                  onClick={() => {
+                    if (importDraft) {
+                      setImportDraft({ ...importDraft, isExplicitIntent: true });
+                    }
+                    setShowDraftPrompt(false);
+                  }}
+                  className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200"
+                >
+                  Tiếp tục
                 </button>
               </div>
             </div>

@@ -1,20 +1,36 @@
-import React, { useState } from 'react';
-import { Search, Plus, Filter, ChevronDown, FileText, Star, RotateCcw, X, Calendar, User, Package, Printer } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Filter, ChevronDown, FileText, Star, RotateCcw, X, Calendar, User, Package, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { ReturnSalesOrder } from '../types';
 import { formatNumber } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export const ReturnSales: React.FC = () => {
   const { returnSalesOrders } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<ReturnSalesOrder | null>(null);
+  
+  // Use scroll lock for modal
+  useScrollLock(!!selectedOrder);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const filteredOrders = (returnSalesOrders || []).filter(o => 
     o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
     o.customer.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, rowsPerPage]);
+
+  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
 
   const totalGoods = filteredOrders.reduce((sum, o) => sum + o.totalGoods, 0);
   const totalDiscount = filteredOrders.reduce((sum, o) => sum + o.discount, 0);
@@ -22,7 +38,7 @@ export const ReturnSales: React.FC = () => {
   const totalPaid = filteredOrders.reduce((sum, o) => sum + o.paid, 0);
 
   return (
-    <div className="h-full flex flex-col bg-slate-50 md:bg-white overflow-hidden">
+    <div className="flex flex-col bg-slate-50 md:bg-white">
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 shrink-0 bg-white border-b border-slate-200">
         <div className="flex-1 max-w-md bg-slate-100 px-4 py-2 rounded-lg border border-transparent focus-within:border-blue-400 focus-within:bg-white transition-all flex items-center gap-3">
@@ -52,8 +68,8 @@ export const ReturnSales: React.FC = () => {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="hidden md:block flex-1 overflow-auto">
+      <div className="flex-1 flex flex-col">
+        <div className="hidden md:block flex-1">
           <table className="w-full border-collapse text-left">
             <thead className="sticky top-0 z-10 bg-white border-b border-slate-200">
               <tr className="text-slate-700 text-[13px] font-bold">
@@ -77,7 +93,7 @@ export const ReturnSales: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredOrders.map(o => (
+              {paginatedOrders.map(o => (
                 <tr 
                   key={o.id} 
                   onClick={() => setSelectedOrder(o)}
@@ -110,8 +126,14 @@ export const ReturnSales: React.FC = () => {
 
         {/* Mobile View */}
         <div className="md:hidden flex-1 overflow-y-auto p-4 space-y-4">
-          {filteredOrders.map(o => (
-            <div 
+          {filteredOrders.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+               <RotateCcw size={48} className="mb-4 opacity-20" />
+               <p className="italic text-sm">Chưa có phiếu trả hàng bán nào</p>
+             </div>
+          ) : (
+            paginatedOrders.map(o => (
+              <div 
               key={o.id} 
               onClick={() => setSelectedOrder(o)}
               className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3"
@@ -128,15 +150,57 @@ export const ReturnSales: React.FC = () => {
                 <p className="text-sm font-black text-slate-800">{formatNumber(o.total)}đ</p>
               </div>
             </div>
-          ))}
+          )))}
         </div>
+
+        {/* Pagination */}
+        {filteredOrders.length > 0 && (
+          <div className="px-4 py-3 border-t border-slate-200 bg-white flex items-center justify-between text-sm shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500">Hiển thị</span>
+              <select 
+                value={rowsPerPage} 
+                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                className="border border-slate-300 rounded px-2 py-1 bg-white focus:outline-none focus:border-blue-500"
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-slate-500">dòng / trang</span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500 font-medium hidden sm:inline">
+                {startIndex + 1} - {Math.min(endIndex, filteredOrders.length)} trên tổng {filteredOrders.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="px-3 font-medium text-slate-700">{currentPage} / {totalPages || 1}</span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Detail Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg">
                   <RotateCcw size={20} />
@@ -213,7 +277,7 @@ export const ReturnSales: React.FC = () => {
               <button className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 font-black rounded-lg uppercase text-[10px] tracking-widest shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
                 <Printer size={16} /> In phiếu
               </button>
-              <button onClick={() => setSelectedOrder(null)} className="flex-1 py-3 bg-blue-600 text-white font-black rounded-lg uppercase text-[10px] tracking-widest">Đóng</button>
+              <button onClick={() => setSelectedOrder(null)} className="flex-1 py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors">Đóng</button>
             </div>
           </div>
         </div>

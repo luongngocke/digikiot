@@ -10,12 +10,16 @@ export const PrintSettings: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setIsSaving(true);
-    await updatePrintSettings(settings);
-    setIsSaving(false);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    updatePrintSettings(settings);
+    
+    // Simulate a brief local "saving" state for visual feedback
+    setTimeout(() => {
+      setIsSaving(false);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+    }, 300);
   };
 
   return (
@@ -44,7 +48,7 @@ export const PrintSettings: React.FC = () => {
                 </label>
                 <input 
                   type="text" 
-                  value={settings.storeName}
+                  value={settings.storeName || ''}
                   onChange={e => setSettings({ ...settings, storeName: e.target.value })}
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:border-blue-500 outline-none transition-all"
                   placeholder="Nhập tên cửa hàng..."
@@ -57,7 +61,7 @@ export const PrintSettings: React.FC = () => {
                 </label>
                 <input 
                   type="text" 
-                  value={settings.address}
+                  value={settings.address || ''}
                   onChange={e => setSettings({ ...settings, address: e.target.value })}
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:border-blue-500 outline-none transition-all"
                   placeholder="Nhập địa chỉ..."
@@ -71,7 +75,7 @@ export const PrintSettings: React.FC = () => {
                   </label>
                   <input 
                     type="text" 
-                    value={settings.phone}
+                    value={settings.phone || ''}
                     onChange={e => setSettings({ ...settings, phone: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:border-blue-500 outline-none transition-all"
                     placeholder="Nhập số điện thoại..."
@@ -83,7 +87,7 @@ export const PrintSettings: React.FC = () => {
                   </label>
                   <input 
                     type="text" 
-                    value={settings.email}
+                    value={settings.email || ''}
                     onChange={e => setSettings({ ...settings, email: e.target.value })}
                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:border-blue-500 outline-none transition-all"
                     placeholder="Nhập email..."
@@ -97,7 +101,7 @@ export const PrintSettings: React.FC = () => {
                 </label>
                 <textarea 
                   rows={2}
-                  value={settings.bankInfo}
+                  value={settings.bankInfo || ''}
                   onChange={e => setSettings({ ...settings, bankInfo: e.target.value })}
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:border-blue-500 outline-none transition-all resize-none"
                   placeholder="Ví dụ: Vietcombank - STK: 123456789 - Chủ TK: NGUYEN VAN A"
@@ -110,7 +114,7 @@ export const PrintSettings: React.FC = () => {
                 </label>
                 <input 
                   type="text" 
-                  value={settings.footNote}
+                  value={settings.footNote || ''}
                   onChange={e => setSettings({ ...settings, footNote: e.target.value })}
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:border-blue-500 outline-none transition-all"
                   placeholder="Lời cảm ơn khách hàng..."

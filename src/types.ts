@@ -12,6 +12,7 @@ export interface Product {
   category?: string;
   brand?: string;
   expectedOutOfStock?: string;
+  image?: string;
 }
 
 export interface Customer {
@@ -32,6 +33,7 @@ export interface Supplier {
   name: string;
   phone: string;
   email?: string;
+  address?: string;
   totalBuy?: number;
   totalDebt?: number;
 }
@@ -60,6 +62,7 @@ export interface Invoice {
   items: InvoiceItem[];
   discount?: number;
   note?: string;
+  taskId?: string;
 }
 
 export interface ImportItem {
@@ -86,6 +89,7 @@ export interface ImportOrder {
   otherCost?: number;
   note?: string;
   returned?: boolean;
+  walletId?: string;
 }
 
 export interface CashTransaction {
@@ -97,6 +101,7 @@ export interface CashTransaction {
   partner: string;
   note: string;
   refId?: string; // ID of Invoice or ImportOrder
+  walletId?: string;
 }
 
 export interface POSDraft {
@@ -110,13 +115,37 @@ export interface POSDraft {
     selectedCustomer: Customer | null;
     note: string;
     paymentMethod: 'CASH' | 'TRANSFER' | 'CARD' | 'WALLET';
+    walletId?: string;
   }[];
 }
 
 export interface ImportDraft {
+  editingId?: string;
   cart: ImportItem[];
   selectedSupplier: Supplier | null;
   paid: number | '';
+  isExplicitIntent?: boolean;
+  walletId?: string;
+  transactionDate?: string;
+  note?: string;
+  orderCode?: string;
+  returnCost?: number;
+  shippingFee?: number;
+  otherCost?: number;
+  overallDiscount?: number;
+}
+
+export interface MaintenanceTransfer {
+  id: string;
+  maintenanceRecordId: string;
+  supplierName: string; // Tên nhà cung cấp (nơi chuyển đến)
+  accessories: string;
+  status: 'Đóng hàng' | 'Đã chuyển' | 'Xử lý xong' | 'Hoàn thành nhận lại';
+  repairCost: number; // Chi phí sửa chữa
+  shippingCost: number; // Chi phí vận chuyển (gửi đi gửi về)
+  transferDate: string;
+  returnDate: string;
+  note: string;
 }
 
 export interface MaintenanceRecord {
@@ -129,8 +158,16 @@ export interface MaintenanceRecord {
   issue: string;
   status: 'RECEIVING' | 'REPAIRING' | 'COMPLETED' | 'RETURNED';
   cost: number;
+  paidAmount?: number;
+  oldDebt?: number;
+  newDebt?: number;
   note: string;
   returnDate?: string;
+  transferId?: string; // ID của phiếu chuyển tuyến
+  feedback?: string;
+  warrantyRemainingInfo?: string;
+  invoiceId?: string;
+  taskId?: string;
 }
 
 export interface ReturnImportOrder {
@@ -197,6 +234,57 @@ export interface PrintSettings {
   footNote: string;
 }
 
+export interface TelegramSettings {
+  botToken: string;
+  chatId: string;
+  enabled: boolean;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: 'TODO' | 'OPEN' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  dueDate?: string;
+  assignedTo?: string;
+  createdBy: string;
+  createdAt: string;
+  customerId?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  taskType?: string;
+  relatedId?: string;
+  completedAt?: string;
+  purchaseId?: string;
+  repairId?: string;
+}
+
+export interface Wallet {
+  id: string;
+  name: string; // e.g. Tiền mặt, MB Bank, Vietcombank
+  type: 'CASH' | 'BANK' | 'EWALLET';
+  balance: number;
+  accountNumber?: string;
+  bankName?: string;
+  ownerName?: string;
+  isActive: boolean;
+  icon?: string;
+  color?: string;
+  backgroundImage?: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  walletId: string;
+  type: 'IN' | 'OUT';
+  amount: number;
+  description: string;
+  date: string;
+  relatedType?: 'INVOICE' | 'PURCHASE' | 'MAINTENANCE' | 'OTHER';
+  relatedId?: string;
+}
+
 export interface ExternalSerial {
   id: string;
   date: string;
@@ -205,6 +293,41 @@ export interface ExternalSerial {
   customer?: string;
   source?: string;
   createdBy?: string;
+  note?: string;
+}
+
+export interface WifiRecord {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  wifiName: string;
+  wifiPassword?: string;
+  createdAt: string;
+  createdBy: string;
+  note?: string;
+}
+
+export interface CameraAccountRecord {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  accountName: string;
+  accountPassword?: string;
+  cameraBrand?: string;
+  createdAt: string;
+  createdBy: string;
+  note?: string;
+}
+
+export interface ImageItem {
+  timestamp: string;
+  name: string;
+  id: string;
+  url: string;
+  fileType: string;
+  category: string;
 }
 
 export interface AppState {
@@ -219,10 +342,18 @@ export interface AppState {
   returnSalesOrders: ReturnSalesOrder[];
   cashTransactions: CashTransaction[];
   maintenanceRecords: MaintenanceRecord[];
+  maintenanceTransfers: MaintenanceTransfer[];
+  images: ImageItem[];
   serials: Serial[];
   stockCards: StockCard[];
   externalSerials: ExternalSerial[];
+  wifiRecords: WifiRecord[];
+  cameraAccounts: CameraAccountRecord[];
+  tasks: Task[];
+  telegramSettings: TelegramSettings;
   posDraft?: POSDraft;
   importDraft?: ImportDraft;
   printSettings: PrintSettings;
+  wallets: Wallet[];
+  walletTransactions: WalletTransaction[];
 }

@@ -1,19 +1,24 @@
-import React, { useState } from 'react';
-import { Search, Plus, FileDown, Star, X, Calendar, Truck, CreditCard, Package, FileText, Printer, ExternalLink, RotateCcw, Wallet, Hash } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, FileDown, Star, X, Calendar, Truck, CreditCard, Package, FileText, Printer, ExternalLink, RotateCcw, Wallet, Hash, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { ImportOrder } from '../types';
 import { formatNumber } from '../lib/utils';
 import { PrintTemplate } from '../components/PrintTemplate';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export const ImportHistory: React.FC = () => {
-  const { importOrders, suppliers, setImportDraft, updateImportOrder, addCashTransaction } = useAppContext();
+  const { importOrders, suppliers, setImportDraft, updateImportOrder, addCashTransaction, cashTransactions, wallets } = useAppContext();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<ImportOrder | null>(null);
   const [printData, setPrintData] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentWalletId, setPaymentWalletId] = useState<string>('');
+  
+  // Use scroll lock for modals
+  useScrollLock(!!selectedOrder || isPaymentModalOpen);
 
   const handlePayment = () => {
     if (!selectedOrder) return;
@@ -21,6 +26,10 @@ export const ImportHistory: React.FC = () => {
     if (amount <= 0) return;
     if (amount > selectedOrder.debt) {
       alert('Số tiền thanh toán không được lớn hơn số tiền còn nợ!'); // We should use a custom alert, but for simplicity we'll just return or cap it. Let's cap it.
+    }
+    if (!paymentWalletId) {
+      alert('Vui lòng chọn ví thanh toán!');
+      return;
     }
     
     const finalAmount = Math.min(amount, selectedOrder.debt);
@@ -34,7 +43,8 @@ export const ImportHistory: React.FC = () => {
       category: 'IMPORT_PAYMENT',
       partner: selectedOrder.supplier,
       note: `Thanh toán thêm cho phiếu nhập ${selectedOrder.id}`,
-      refId: selectedOrder.id
+      refId: selectedOrder.id,
+      walletId: paymentWalletId
     });
 
     updateImportOrder(selectedOrder.id, {
@@ -54,7 +64,7 @@ export const ImportHistory: React.FC = () => {
   };
 
   const handlePrint = (order: ImportOrder) => {
-    const supplier = suppliers.find(s => s.name === order.supplier);
+    const supplier = (suppliers || []).find(s => s.name === order.supplier);
     setPrintData({
       title: 'PHIẾU NHẬP HÀNG',
       id: order.id,
@@ -76,18 +86,46 @@ export const ImportHistory: React.FC = () => {
   };
 
   const handleOpenOrder = (order: ImportOrder) => {
-    const supplier = suppliers.find(s => s.name === order.supplier);
+    const supplier = (suppliers || []).find(s => s.name === order.supplier);
+    
+    // Parse order.date back to YYYY-MM-DDThh:mm
+    let parsedDate = '';
+    if (order.date) {
+      try {
+        const [timePart, datePart] = order.date.split(' ');
+        if (timePart && datePart) {
+          const [hh, mm] = timePart.split(':');
+          const [DD, MM, YYYY] = datePart.split('/');
+          parsedDate = `${YYYY}-${MM.padStart(2, '0')}-${DD.padStart(2, '0')}T${hh.padStart(2, '0')}:${mm.padStart(2, '0')}`;
+        }
+      } catch (e) {
+        console.warn("Could not parse date", order.date);
+      }
+    }
+
+    const relatedTx = cashTransactions.find(t => t.refId === order.id && t.category === 'IMPORT_PAYMENT');
+    const draftWalletId = relatedTx?.walletId || order.walletId || undefined;
+
     setImportDraft({
+      editingId: order.id,
       cart: order.items.map(item => ({
         ...item,
         hasSerial: !!(item.sn && item.sn.length > 0),
         serials: item.sn || [],
-        unit: 'Cái',
+        unit: item.unit || 'Cái',
         discount: 0,
         note: ''
       })),
       selectedSupplier: supplier || { id: '', name: order.supplier, phone: '' },
-      paid: order.paid
+      paid: order.paid,
+      transactionDate: parsedDate,
+      walletId: draftWalletId,
+      overallDiscount: order.discount || 0,
+      returnCost: order.returnCost || 0,
+      shippingFee: order.shippingFee || 0,
+      otherCost: order.otherCost || 0,
+      note: order.note || '',
+      isExplicitIntent: true
     });
     navigate('/import');
   };
@@ -96,14 +134,26 @@ export const ImportHistory: React.FC = () => {
     navigate('/create-return-import', { state: { preFillOrder: order } });
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+
   const filteredOrders = (importOrders || []).filter(order => 
     (order.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
     (order.supplier || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, rowsPerPage]);
+
+  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedOrders = filteredOrders.slice().reverse().slice(startIndex, endIndex);
+
   return (
-    <div className="h-full flex flex-col px-4 md:px-0 py-4 md:py-0">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full mx-auto w-full">
+    <div className="flex flex-col px-4 md:px-0 py-4 md:py-0">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col mx-auto w-full">
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-50/50 shrink-0">
           <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -115,17 +165,14 @@ export const ImportHistory: React.FC = () => {
               className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-blue-500 shadow-sm font-medium transition-all"
             />
           </div>
-          <div className="flex gap-2 w-full md:w-auto">
-            <Link to="/import" className="flex-1 md:flex-none justify-center bg-indigo-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg font-bold text-xs hover:bg-indigo-100 transition-colors shadow-sm flex items-center gap-2">
+          <div className="hidden md:flex gap-2">
+            <Link to="/import" className="bg-indigo-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg font-bold text-xs hover:bg-indigo-100 transition-colors shadow-sm flex items-center gap-2">
               <Plus size={14} /> Nhập hàng
             </Link>
-            <button className="flex-1 md:flex-none justify-center bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold text-xs hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
-              <FileDown size={14} /> <span className="hidden sm:inline">Xuất file</span>
-            </button>
           </div>
         </div>
         
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           <table className="w-full text-left border-collapse whitespace-nowrap hidden md:table">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 sticky top-0 z-10">
               <tr>
@@ -147,7 +194,7 @@ export const ImportHistory: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.slice().reverse().map(order => (
+                paginatedOrders.map(order => (
                   <tr 
                     key={order.id} 
                     onClick={() => setSelectedOrder(order)}
@@ -159,7 +206,7 @@ export const ImportHistory: React.FC = () => {
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
                         <Star className="text-slate-300 hover:text-yellow-400 cursor-pointer transition-colors" size={16} />
-                        <span className="font-bold text-indigo-600 uppercase group-hover:underline">{order.id}</span>
+                        <span className="font-bold text-indigo-600 uppercase">{order.id}</span>
                       </div>
                     </td>
                     <td className="py-4 px-4 text-xs text-slate-500 font-medium">{order.date}</td>
@@ -191,7 +238,7 @@ export const ImportHistory: React.FC = () => {
                 Danh sách phiếu nhập trống
               </div>
             ) : (
-              filteredOrders.slice().reverse().map(order => (
+              paginatedOrders.map(order => (
                 <div 
                   key={order.id} 
                   onClick={() => setSelectedOrder(order)}
@@ -229,14 +276,56 @@ export const ImportHistory: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {filteredOrders.length > 0 && (
+          <div className="px-4 py-3 border-t border-slate-200 bg-white flex items-center justify-between text-sm shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500">Hiển thị</span>
+              <select 
+                value={rowsPerPage} 
+                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                className="border border-slate-300 rounded px-2 py-1 bg-white focus:outline-none focus:border-blue-500"
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-slate-500">dòng / trang</span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500 font-medium hidden sm:inline">
+                {startIndex + 1} - {Math.min(endIndex, filteredOrders.length)} trên tổng {filteredOrders.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="px-3 font-medium text-slate-700">{currentPage} / {totalPages || 1}</span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Order Detail Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm print:hidden">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 p-0 bg-slate-900/60 backdrop-blur-sm print:hidden">
+          <div className="bg-white w-full max-w-2xl md:rounded-2xl rounded-none shadow-2xl overflow-hidden flex flex-col h-full md:h-auto md:max-h-[90vh] animate-in fade-in zoom-in duration-300">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
                   <Truck size={24} />
@@ -373,13 +462,27 @@ export const ImportHistory: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-                  <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Đã thanh toán</p>
-                    <p className="text-base font-bold text-emerald-700 mt-1">{formatNumber(selectedOrder.paid)}đ</p>
+                  <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Đã thanh toán</p>
+                      <p className="text-base font-bold text-emerald-700 mt-1">{formatNumber(selectedOrder.paid)}đ</p>
+                    </div>
+                    {selectedOrder.paid > 0 && (
+                      <div className="mt-2 text-xs font-medium text-emerald-600/80">
+                        {(() => {
+                          const paymentTransactions = cashTransactions.filter(t => t.refId === selectedOrder.id && t.category === 'IMPORT_PAYMENT');
+                          const walletIds = [...new Set(paymentTransactions.map(t => t.walletId).filter(Boolean))];
+                          const walletNames = walletIds.map(wId => wallets?.find(w => w.id === wId)?.name).filter(Boolean);
+                          return walletNames.length > 0 ? `Qua: ${walletNames.join(', ')}` : 'Tiền mặt';
+                        })()}
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-red-50/50 p-3 rounded-xl border border-red-100">
-                    <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Còn nợ</p>
-                    <p className="text-base font-bold text-red-700 mt-1">{formatNumber(selectedOrder.debt)}đ</p>
+                  <div className="bg-red-50/50 p-3 rounded-xl border border-red-100 flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Còn nợ</p>
+                      <p className="text-base font-bold text-red-700 mt-1">{formatNumber(selectedOrder.debt)}đ</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -409,7 +512,7 @@ export const ImportHistory: React.FC = () => {
               </button>
               <button 
                 onClick={() => setSelectedOrder(null)}
-                className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold uppercase text-sm tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+                className="flex-1 py-4 bg-[#991b1b] text-white rounded-xl font-bold uppercase text-sm tracking-widest shadow-lg shadow-red-100 hover:bg-[#7f1d1d] transition-all active:scale-95"
               >
                 Đóng
               </button>
@@ -457,6 +560,20 @@ export const ImportHistory: React.FC = () => {
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">đ</span>
                 </div>
               </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ví thanh toán</label>
+                <select
+                  value={paymentWalletId}
+                  onChange={e => setPaymentWalletId(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 text-sm transition-colors cursor-pointer appearance-none"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em`, paddingRight: `2.5rem` }}
+                >
+                  <option value="" disabled>Chọn ví</option>
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
               <button
@@ -478,6 +595,14 @@ export const ImportHistory: React.FC = () => {
       )}
 
       {printData && <PrintTemplate {...printData} />}
+      
+      {/* Mobile Floating Action Button */}
+      <Link 
+        to="/import" 
+        className="md:hidden fixed bottom-24 right-4 w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-200 z-40 active:scale-95 transition-transform"
+      >
+        <Plus size={24} />
+      </Link>
     </div>
   );
 };

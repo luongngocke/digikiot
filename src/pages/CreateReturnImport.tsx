@@ -52,17 +52,21 @@ export const CreateReturnImport: React.FC = () => {
   }, [finalTotal]);
 
   useEffect(() => {
-    if (searchTerm.trim()) {
-      const filtered = (importOrders || []).filter(o => 
-        !o.returned && (
-          (o.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-          (o.supplier || '').toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-      setOrderSuggestions(filtered);
-    } else {
-      setOrderSuggestions([]);
-    }
+    const handler = setTimeout(() => {
+      if (searchTerm.trim()) {
+        const filtered = (importOrders || []).filter(o => 
+          !o.returned && (
+            (o.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (o.supplier || '').toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        );
+        setOrderSuggestions(filtered.slice(0, 30));
+      } else {
+        setOrderSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
   }, [searchTerm, importOrders]);
 
   const handleSelectOrder = (order: ImportOrder) => {
@@ -227,7 +231,7 @@ export const CreateReturnImport: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col lg:flex-row bg-slate-50 relative overflow-hidden">
+    <div className="flex flex-col lg:flex-row bg-slate-50 relative">
       {/* Left Column: Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}

@@ -1,5 +1,8 @@
 {
-  "name": "kiotclone 15/5 Ver 2",
+  "name": "Digikiot 1/5 ver 1",
   "description": "dự án quản lý bán hàng",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
 }

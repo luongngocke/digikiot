@@ -46,15 +46,19 @@ export const CreateReturnSales: React.FC = () => {
   }, [finalTotal]);
 
   useEffect(() => {
-    if (searchTerm.trim()) {
-      const filtered = (invoices || []).filter(o => 
-        (o.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (o.customer || '').toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setInvoiceSuggestions(filtered);
-    } else {
-      setInvoiceSuggestions([]);
-    }
+    const handler = setTimeout(() => {
+      if (searchTerm.trim()) {
+        const filtered = (invoices || []).filter(o => 
+          (o.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+          (o.customer || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setInvoiceSuggestions(filtered.slice(0, 30));
+      } else {
+        setInvoiceSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
   }, [searchTerm, invoices]);
 
   const handleSelectInvoice = (invoice: Invoice) => {
@@ -144,7 +148,7 @@ export const CreateReturnSales: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col lg:flex-row bg-slate-50 relative overflow-hidden">
+    <div className="flex flex-col lg:flex-row bg-slate-50 relative">
       <div className="flex-1 flex flex-col min-w-0">
         <div className="h-14 flex items-center px-4 bg-white border-b border-slate-200 shrink-0 gap-2">
           <button onClick={() => navigate('/return-sales')} className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">

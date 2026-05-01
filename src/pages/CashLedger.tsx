@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import { Search, Wallet, Calendar, ArrowUpRight, ArrowDownLeft, FileText, Printer, X, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Wallet, Calendar, ArrowUpRight, ArrowDownLeft, FileText, Printer, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useScrollLock } from '../hooks/useScrollLock';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { formatNumber, parseFormattedNumber, parseDateString } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
 import { PrintTemplate } from '../components/PrintTemplate';
 
 export const CashLedger: React.FC = () => {
-  const { cashTransactions, addCashTransaction } = useAppContext();
+  const { cashTransactions, addCashTransaction, wallets } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'ALL' | 'RECEIPT' | 'PAYMENT'>('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useScrollLock(isModalOpen);
+  useEscapeKey(() => setIsModalOpen(false), isModalOpen);
 
   // Form state
   const [type, setType] = useState<'RECEIPT' | 'PAYMENT'>('RECEIPT');
@@ -17,6 +22,7 @@ export const CashLedger: React.FC = () => {
   const [partner, setPartner] = useState('');
   const [note, setNote] = useState('');
   const [category, setCategory] = useState<any>('OTHER');
+  const [walletId, setWalletId] = useState<string>('');
   
   // Print State
   const [printData, setPrintData] = useState<any>(null);
@@ -38,6 +44,18 @@ export const CashLedger: React.FC = () => {
     })
     .sort((a, b) => parseDateString(b.date) - parseDateString(a.date));
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, rowsPerPage]);
+
+  const totalPages = Math.ceil(filteredTransactions.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
   const totalReceipts = (cashTransactions || [])
     .filter(t => t.type === 'RECEIPT')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -49,8 +67,8 @@ export const CashLedger: React.FC = () => {
   const balance = totalReceipts - totalPayments;
 
   const handleAddTransaction = () => {
-    if (!amount || !partner || !note) {
-      alert('Vui lòng nhập đủ thông tin');
+    if (!amount || !partner || !note || !walletId) {
+      alert('Vui lòng nhập đủ thông tin và chọn Ví/Ngân hàng');
       return;
     }
 
@@ -65,7 +83,8 @@ export const CashLedger: React.FC = () => {
       amount: parseFormattedNumber(amount) || 0,
       partner,
       note,
-      category
+      category,
+      walletId: walletId || undefined
     });
 
     setIsModalOpen(false);
@@ -73,10 +92,11 @@ export const CashLedger: React.FC = () => {
     setPartner('');
     setNote('');
     setCategory('OTHER');
+    setWalletId('');
   };
 
   return (
-    <div className="h-full flex flex-col px-4 md:px-0 py-4 md:py-0">
+    <div className="flex flex-col px-4 md:px-0 py-4 md:py-0">
       {/* Print Template Container */}
       {printData && <PrintTemplate {...printData} />}
 
@@ -143,8 +163,8 @@ export const CashLedger: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-6 print:hidden">
-        <div className="flex-1 overflow-auto">
+      <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col mb-6 print:hidden">
+        <div className="flex-1">
           <table className="w-full text-left border-collapse hidden md:table">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
@@ -162,7 +182,7 @@ export const CashLedger: React.FC = () => {
                   <td colSpan={6} className="p-10 text-center text-slate-400 italic text-sm">Không tìm thấy giao dịch nào.</td>
                 </tr>
               ) : (
-                filteredTransactions.map((t, idx) => (
+                paginatedTransactions.map((t, idx) => (
                   <tr key={`${t.id}-${idx}`} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors group">
                     <td className="p-4">
                       <span className="font-semibold text-xs text-slate-800 tracking-tight">{t.id}</span>
@@ -216,7 +236,7 @@ export const CashLedger: React.FC = () => {
                 Không tìm thấy giao dịch nào
               </div>
             ) : (
-              filteredTransactions.map((t, idx) => (
+              paginatedTransactions.map((t, idx) => (
                 <div 
                   key={`${t.id}-${idx}`} 
                   className="p-4 space-y-3 active:bg-slate-50 transition-colors"
@@ -261,6 +281,48 @@ export const CashLedger: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {filteredTransactions.length > 0 && (
+          <div className="px-4 py-3 border-t border-slate-200 bg-white flex items-center justify-between text-sm shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500">Hiển thị</span>
+              <select 
+                value={rowsPerPage} 
+                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                className="border border-slate-300 rounded px-2 py-1 bg-white focus:outline-none focus:border-blue-500"
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-slate-500">dòng / trang</span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500 font-medium hidden sm:inline">
+                {startIndex + 1} - {Math.min(endIndex, filteredTransactions.length)} trên tổng {filteredTransactions.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="px-3 font-medium text-slate-700">{currentPage} / {totalPages || 1}</span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {isModalOpen && (
@@ -322,6 +384,24 @@ export const CashLedger: React.FC = () => {
               </div>
 
               <div>
+                <label className="text-[9px] font-semibold text-slate-400 tracking-wider ml-1">Ví / Ngân hàng thực hiện</label>
+                {wallets.length === 0 ? (
+                   <div className="text-rose-500 font-medium text-xs mt-1">Bạn chưa cấu hình Ví/Ngân hàng</div>
+                ) : (
+                  <select 
+                    value={walletId}
+                    onChange={(e) => setWalletId(e.target.value)}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none mt-1 shadow-inner focus:border-blue-400"
+                  >
+                    <option value="">-- Chọn ví (Bắt buộc) --</option>
+                    {wallets.map((w, idx) => (
+                      <option key={`${w.id}-${idx}`} value={w.id}>{w.name} ({w.type === 'CASH' ? 'Tiền mặt' : 'Ngân hàng'})</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
                 <label className="text-[9px] font-semibold text-slate-400 tracking-wider ml-1">Loại thu chi</label>
                 <select 
                   value={category}
@@ -336,12 +416,20 @@ export const CashLedger: React.FC = () => {
                 </select>
               </div>
               
-              <button 
-                onClick={handleAddTransaction}
-                className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold shadow-md shadow-blue-200 tracking-wide mt-2 active:scale-95 transition-all hover:bg-blue-700"
-              >
-                Lưu phiếu
-              </button>
+              <div className="flex gap-3 mt-2">
+                <button 
+                  onClick={handleAddTransaction}
+                  className="flex-[2] bg-blue-600 text-white py-3.5 rounded-lg font-semibold shadow-md shadow-blue-200 tracking-wide active:scale-95 transition-all hover:bg-blue-700"
+                >
+                  Lưu phiếu
+                </button>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 bg-[#991b1b] text-white py-3.5 rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] active:scale-95 transition-all"
+                >
+                  Đóng
+                </button>
+              </div>
             </div>
           </div>
         </div>

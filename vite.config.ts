@@ -13,9 +13,9 @@ export default defineConfig(({mode}) => {
       VitePWA({
         registerType: 'autoUpdate',
         manifest: {
-          name: 'KiotViet Clone',
-          short_name: 'KiotClone',
-          description: 'Dự án quản lý bán hàng',
+          name: 'Digikiot',
+          short_name: 'Digikiot',
+          description: 'Dự án quản lý bán hàng DigiKiot',
           theme_color: '#2563eb',
           background_color: '#ffffff',
           display: 'standalone',

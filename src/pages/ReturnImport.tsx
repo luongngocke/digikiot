@@ -1,20 +1,36 @@
-import React, { useState } from 'react';
-import { Search, Plus, Filter, Download, LayoutGrid, Settings, HelpCircle, Star, ChevronDown, MoreHorizontal, FileText, Printer, Trash2, X, Calendar, User, Package, Truck, ArrowUpRight, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Filter, Download, LayoutGrid, Settings, HelpCircle, Star, ChevronDown, MoreHorizontal, FileText, Printer, Trash2, X, Calendar, User, Package, Truck, ArrowUpRight, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { ReturnImportOrder } from '../types';
 import { formatNumber } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export const ReturnImport: React.FC = () => {
   const { returnImportOrders } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<ReturnImportOrder | null>(null);
+  
+  // Use scroll lock for modal
+  useScrollLock(!!selectedOrder);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const filteredOrders = (returnImportOrders || []).filter(o => 
     o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
     o.supplier.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, rowsPerPage]);
+
+  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedOrders = filteredOrders.slice().reverse().slice(startIndex, endIndex);
 
   const totalGoods = filteredOrders.reduce((sum, o) => sum + o.totalGoods, 0);
   const totalDiscount = filteredOrders.reduce((sum, o) => sum + o.discount, 0);
@@ -22,7 +38,7 @@ export const ReturnImport: React.FC = () => {
   const totalReceived = filteredOrders.reduce((sum, o) => sum + o.received, 0);
 
   return (
-    <div className="h-full flex flex-col bg-slate-50 md:bg-white overflow-hidden">
+    <div className="flex flex-col bg-slate-50 md:bg-white">
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 shrink-0 bg-white border-b border-slate-200">
         {/* Left: Search */}
@@ -42,17 +58,11 @@ export const ReturnImport: React.FC = () => {
         <div className="flex items-center gap-2">
           <button 
             onClick={() => navigate('/create-return-import')}
-            className="px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-lg shadow-sm flex items-center gap-2 font-bold text-sm hover:bg-blue-50 transition-all"
+            className="hidden md:flex px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-lg shadow-sm items-center gap-2 font-bold text-sm hover:bg-blue-50 transition-all"
           >
             <Plus size={18} /> Trả hàng nhập
           </button>
           
-          <div className="relative group">
-            <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg shadow-sm flex items-center gap-2 font-bold text-sm hover:bg-slate-50 transition-all">
-              <FileText size={18} /> Xuất file <ChevronDown size={16} />
-            </button>
-          </div>
-
           <div className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-3 ml-1">
             <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-all">
               <LayoutGrid size={20} />
@@ -68,9 +78,9 @@ export const ReturnImport: React.FC = () => {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="flex-1 flex flex-col">
         {/* Desktop Table View */}
-        <div className="hidden md:block flex-1 overflow-auto">
+        <div className="hidden md:block flex-1">
           <table className="w-full border-collapse text-left">
             <thead className="sticky top-0 z-10 bg-white border-b border-slate-200">
               <tr className="text-slate-700 text-[13px] font-bold">
@@ -96,7 +106,7 @@ export const ReturnImport: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredOrders.slice().reverse().map(o => (
+              {paginatedOrders.map(o => (
                 <tr 
                   key={o.id} 
                   onClick={() => setSelectedOrder(o)}
@@ -133,7 +143,7 @@ export const ReturnImport: React.FC = () => {
           {filteredOrders.length === 0 ? (
             <p className="text-center py-20 text-slate-400 italic text-sm">Chưa có phiếu trả hàng nhập.</p>
           ) : (
-            filteredOrders.slice().reverse().map(o => (
+            paginatedOrders.map(o => (
               <div 
                 key={o.id} 
                 onClick={() => setSelectedOrder(o)}
@@ -154,13 +164,55 @@ export const ReturnImport: React.FC = () => {
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        {filteredOrders.length > 0 && (
+          <div className="px-4 py-3 border-t border-slate-200 bg-white flex items-center justify-between text-sm shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500">Hiển thị</span>
+              <select 
+                value={rowsPerPage} 
+                onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                className="border border-slate-300 rounded px-2 py-1 bg-white focus:outline-none focus:border-blue-500"
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-slate-500">dòng / trang</span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500 font-medium hidden sm:inline">
+                {startIndex + 1} - {Math.min(endIndex, filteredOrders.length)} trên tổng {filteredOrders.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="px-3 font-medium text-slate-700">{currentPage} / {totalPages || 1}</span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-1.5 border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Detail Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white shadow-lg">
                   <RotateCcw size={20} />
@@ -237,11 +289,18 @@ export const ReturnImport: React.FC = () => {
               <button className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 font-black rounded-lg uppercase text-[10px] tracking-widest shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
                 <Printer size={16} /> In phiếu
               </button>
-              <button onClick={() => setSelectedOrder(null)} className="flex-1 py-3 bg-orange-600 text-white font-black rounded-lg uppercase text-[10px] tracking-widest">Đóng</button>
+              <button onClick={() => setSelectedOrder(null)} className="flex-1 py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors">Đóng</button>
             </div>
           </div>
         </div>
       )}
+      {/* Mobile FAB for Add */}
+      <button 
+        onClick={() => navigate('/create-return-import')}
+        className="md:hidden fixed bottom-24 right-4 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-200 z-40 active:scale-95 transition-transform"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 };
