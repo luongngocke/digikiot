@@ -5,6 +5,7 @@ import { Plus, ArrowLeftRight, Activity, X, Wallet as WalletIcon, Landmark, Cred
 import { formatNumber } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
 import { ImageLibraryModal } from '../components/ImageLibraryModal';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 const AVAILABLE_ICONS: Record<string, React.FC<any>> = {
   Wallet: WalletIcon,
@@ -26,6 +27,17 @@ const AVAILABLE_COLORS = [
   { id: 'teal', bg: 'bg-teal-500', light: 'bg-teal-50', text: 'text-teal-500' },
   { id: 'cyan', bg: 'bg-cyan-500', light: 'bg-cyan-50', text: 'text-cyan-500' },
 ];
+
+const WALLET_CATEGORY_LABELS: Record<string, string> = {
+  'DEPOSIT': 'Nạp tiền vào ví',
+  'SALES_REVENUE': 'Doanh thu bán/sửa chữa',
+  'DEBT_COLLECTION': 'Thu nợ khách hàng',
+  'WITHDRAW': 'Rút tiền',
+  'IMPORT_PAYMENT': 'Chi phí nhập hàng',
+  'DEBT_PAYMENT': 'Trả nợ NCC',
+  'EXPENSE': 'Chi phí khác',
+  'OTHER': 'Khác'
+};
 
 export const WalletManagement: React.FC = () => {
   const { currentUser, wallets, walletTransactions, addWallet, updateWallet, deleteWallet, addWalletTransaction } = useAppContext();
@@ -50,8 +62,14 @@ export const WalletManagement: React.FC = () => {
 
   // Transaction form states
   const [txType, setTxType] = useState<'IN' | 'OUT'>('IN');
+  const [txCategory, setTxCategory] = useState('OTHER');
   const [txAmount, setTxAmount] = useState('');
   const [txDescription, setTxDescription] = useState('');
+
+  useMobileBackModal(isModalOpen, () => setIsModalOpen(false));
+  useMobileBackModal(isImageLibraryOpen, () => setIsImageLibraryOpen(false));
+  useMobileBackModal(isTransactionModalOpen, () => setIsTransactionModalOpen(false));
+  useMobileBackModal(!!editingWallet, () => setEditingWallet(null));
 
   if (currentUser?.role !== 'ADMIN') {
     return (
@@ -106,6 +124,7 @@ export const WalletManagement: React.FC = () => {
       amount,
       description: txDescription || (txType === 'IN' ? 'Nạp tiền vào ví' : 'Rút tiền khỏi ví'),
       date: new Date().toLocaleString('vi-VN'),
+      category: txCategory,
       relatedType: 'OTHER'
     });
 
@@ -142,6 +161,7 @@ export const WalletManagement: React.FC = () => {
   const openTransactionModal = (wallet: Wallet) => {
     setEditingWallet(wallet);
     setTxType('IN');
+    setTxCategory('OTHER');
     setTxAmount('');
     setTxDescription('');
     setIsTransactionModalOpen(true);
@@ -298,6 +318,7 @@ export const WalletManagement: React.FC = () => {
                     <th className="px-6 py-4">Thời gian</th>
                     <th className="px-6 py-4">Ví giao dịch</th>
                     <th className="px-6 py-4">Loại GD</th>
+                    <th className="px-6 py-4">Danh mục</th>
                     <th className="px-6 py-4 text-right">Số tiền</th>
                     <th className="px-6 py-4 max-w-[250px]">Ghi chú</th>
                   </tr>
@@ -316,6 +337,11 @@ export const WalletManagement: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded inline-flex text-[10px] font-black uppercase ${t.type === 'IN' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                           {t.type === 'IN' ? 'THU VÀO' : 'CHI RA'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="font-bold text-slate-600 text-xs">
+                          {t.category ? WALLET_CATEGORY_LABELS[t.category] || 'Khác' : 'Khác'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -539,14 +565,40 @@ export const WalletManagement: React.FC = () => {
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Loại giao dịch</label>
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => setTxType('IN')}
+                    onClick={() => { setTxType('IN'); setTxCategory('OTHER'); }}
                     className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors border ${txType === 'IN' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
                   >THU VÀO</button>
                   <button 
-                    onClick={() => setTxType('OUT')}
+                    onClick={() => { setTxType('OUT'); setTxCategory('OTHER'); }}
                     className={`flex-1 py-2 text-xs font-bold rounded-xl transition-colors border ${txType === 'OUT' ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
                   >CHI RA</button>
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Danh mục</label>
+                <select
+                  value={txCategory}
+                  onChange={(e) => setTxCategory(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-blue-400 text-sm font-semibold"
+                >
+                  {txType === 'IN' ? (
+                    <>
+                      <option value="DEPOSIT">Nạp tiền vào ví</option>
+                      <option value="SALES_REVENUE">Doanh thu bán/sửa chữa</option>
+                      <option value="DEBT_COLLECTION">Thu nợ khách hàng</option>
+                      <option value="OTHER">Thêm mới / Khác</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="WITHDRAW">Rút tiền</option>
+                      <option value="IMPORT_PAYMENT">Chi phí nhập hàng</option>
+                      <option value="DEBT_PAYMENT">Trả nợ NCC</option>
+                      <option value="EXPENSE">Chi phí khác</option>
+                      <option value="OTHER">Thêm mới / Khác</option>
+                    </>
+                  )}
+                </select>
               </div>
 
               <div className="space-y-1.5">

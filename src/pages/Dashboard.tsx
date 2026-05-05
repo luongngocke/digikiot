@@ -33,6 +33,7 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { formatNumber, formatDateTime } from '../lib/utils';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { 
   BarChart, 
   Bar, 
@@ -53,7 +54,8 @@ export const Dashboard: React.FC = () => {
     returnImportOrders, 
     maintenanceRecords,
     customers,
-    suppliers
+    suppliers,
+    products
   } = useAppContext();
   const [showProfit, setShowProfit] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
@@ -65,12 +67,20 @@ export const Dashboard: React.FC = () => {
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   
-  // Debt pagination
+  // Debt & Low Stock pagination
   const [customerDebtPage, setCustomerDebtPage] = useState(1);
   const [supplierDebtPage, setSupplierDebtPage] = useState(1);
+  const [lowStockPage, setLowStockPage] = useState(1);
   const DEBT_ITEMS_PER_PAGE = 3;
+  const LOW_STOCK_ITEMS_PER_PAGE = 5;
 
   useScrollLock(showDateModal || showActivityModal);
+
+  const lowStockProducts = useMemo(() => {
+    return (products || [])
+      .filter(p => (p.status || 'Đang kinh doanh') === 'Đang kinh doanh' && !p.isService && p.stock !== null && p.stock < (p.lowStockThreshold ?? 5))
+      .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0));
+  }, [products]);
 
   const parseDate = (dateStr: any) => {
     if (!dateStr) return new Date(0);
@@ -550,7 +560,12 @@ export const Dashboard: React.FC = () => {
     return formatNumber(val);
   };
 
-  return (
+
+  useMobileBackModal(showProfit, () => setShowProfit(false)); // auto-injected
+  useMobileBackModal(showDateModal, () => setShowDateModal(false)); // auto-injected
+  useMobileBackModal(showActivityModal, () => setShowActivityModal(false)); // auto-injected
+  useMobileBackModal(!!selectedActivity, () => setSelectedActivity(null));
+return (
     <div className="bg-slate-50 md:bg-transparent px-0 md:px-0 py-0 md:py-0">
       {/* Desktop View */}
       <div className="hidden md:block p-6">
@@ -777,73 +792,125 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           
-          {/* Desktop Top Products */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg text-slate-800 tracking-tight flex items-center gap-2">
-                <TrendingUp size={20} className="text-blue-500" /> Sản phẩm bán chạy
-              </h3>
-              <div className="flex items-center gap-3">
-                <select 
-                  value={topProductLimit}
-                  onChange={(e) => setTopProductLimit(parseInt(e.target.value))}
-                  className="bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-500 rounded-lg px-2 py-1.5 outline-none"
-                >
-                  <option value={6}>Hiện 6</option>
-                  <option value={10}>Hiện 10</option>
-                  <option value={20}>Hiện 20</option>
-                </select>
-                <div className="flex bg-slate-100 p-1 rounded-lg">
-                  <button 
-                    onClick={() => setTopProductTab('quantity')}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${topProductTab === 'quantity' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          {/* Desktop Top Products & Low Stock */}
+          <div className="flex flex-col gap-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-bold text-lg text-slate-800 tracking-tight flex items-center gap-2">
+                  <TrendingUp size={20} className="text-blue-500" /> Sản phẩm bán chạy
+                </h3>
+                <div className="flex items-center gap-3">
+                  <select 
+                    value={topProductLimit}
+                    onChange={(e) => setTopProductLimit(parseInt(e.target.value))}
+                    className="bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-500 rounded-lg px-2 py-1.5 outline-none"
                   >
-                    Số lượng
-                  </button>
-                  <button 
-                    onClick={() => setTopProductTab('revenue')}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${topProductTab === 'revenue' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                  >
-                    Doanh thu
-                  </button>
-                  <button 
-                    onClick={() => setTopProductTab('profit')}
-                    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${topProductTab === 'profit' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                  >
-                    Lợi nhuận
-                  </button>
+                    <option value={6}>Hiện 6</option>
+                    <option value={10}>Hiện 10</option>
+                    <option value={20}>Hiện 20</option>
+                  </select>
+                  <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <button 
+                      onClick={() => setTopProductTab('quantity')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${topProductTab === 'quantity' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      Số lượng
+                    </button>
+                    <button 
+                      onClick={() => setTopProductTab('revenue')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${topProductTab === 'revenue' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      Doanh thu
+                    </button>
+                    <button 
+                      onClick={() => setTopProductTab('profit')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${topProductTab === 'profit' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      Lợi nhuận
+                    </button>
+                  </div>
                 </div>
               </div>
+              {topProductsFiltered.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+                  {topProductsFiltered.slice(0, topProductLimit).map((p, i) => (
+                    <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">#{i + 1}</span>
+                          <p className="text-xs font-bold text-slate-600 text-right">{p.qty} sl</p>
+                        </div>
+                        <p className="font-bold text-sm text-slate-800 line-clamp-2 leading-snug">{p.name}</p>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-slate-200">
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-[10px] text-slate-400 mb-0.5">Doanh thu:</p>
+                            <p className="font-bold text-slate-700 text-xs tracking-tight">{formatNumber(p.revenue)}đ</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-emerald-500 font-bold mb-0.5">Lợi nhuận:</p>
+                            <p className="font-bold text-emerald-600 text-sm tracking-tight">{formatNumber(p.profit)}đ</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-slate-400 italic text-sm">Chưa có dữ liệu bán hàng.</div>
+              )}
             </div>
-            {topProductsFiltered.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
-                {topProductsFiltered.slice(0, topProductLimit).map((p, i) => (
-                  <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">#{i + 1}</span>
-                        <p className="text-xs font-bold text-slate-600 text-right">{p.qty} sl</p>
-                      </div>
-                      <p className="font-bold text-sm text-slate-800 line-clamp-2 leading-snug">{p.name}</p>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-slate-200">
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <p className="text-[10px] text-slate-400 mb-0.5">Doanh thu:</p>
-                          <p className="font-bold text-slate-700 text-xs tracking-tight">{formatNumber(p.revenue)}đ</p>
+
+            {/* Desktop Low Stock */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <h3 className="font-bold text-lg text-slate-800 tracking-tight flex items-center gap-2 mb-6">
+                <Box size={20} className="text-red-500" /> Sản phẩm sắp hết hàng
+              </h3>
+              {lowStockProducts.length > 0 ? (
+                <>
+                  <div className="space-y-3">
+                    {lowStockProducts.slice((lowStockPage - 1) * LOW_STOCK_ITEMS_PER_PAGE, lowStockPage * LOW_STOCK_ITEMS_PER_PAGE).map((p, i) => (
+                      <div key={i} className="flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-100">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <p className="font-bold text-sm text-slate-800 truncate">{p.name}</p>
+                          <p className="text-[11px] text-slate-500">{p.id}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-[10px] text-emerald-500 font-bold mb-0.5">Lợi nhuận:</p>
-                          <p className="font-bold text-emerald-600 text-sm tracking-tight">{formatNumber(p.profit)}đ</p>
+                        <div className="text-right shrink-0">
+                          <p className="font-black text-red-600 text-sm tracking-tight">{p.stock} <span className="text-xs font-normal">sl</span></p>
+                          <p className="text-[11px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 inline-block mt-1">
+                            Tối thiểu: {p.lowStockThreshold ?? 5}
+                          </p>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-slate-400 italic text-sm">Chưa có dữ liệu bán hàng.</div>
-            )}
+                  {lowStockProducts.length > LOW_STOCK_ITEMS_PER_PAGE && (
+                    <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+                      <button 
+                        onClick={() => setLowStockPage(p => Math.max(1, p - 1))}
+                        disabled={lowStockPage === 1}
+                        className="p-1 rounded-md hover:bg-slate-100 disabled:opacity-50 text-slate-600"
+                      >
+                        <ChevronRight size={16} className="rotate-180" />
+                      </button>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {lowStockPage} / {Math.ceil(lowStockProducts.length / LOW_STOCK_ITEMS_PER_PAGE)}
+                      </span>
+                      <button 
+                        onClick={() => setLowStockPage(p => Math.min(Math.ceil(lowStockProducts.length / LOW_STOCK_ITEMS_PER_PAGE), p + 1))}
+                        disabled={lowStockPage >= Math.ceil(lowStockProducts.length / LOW_STOCK_ITEMS_PER_PAGE)}
+                        className="p-1 rounded-md hover:bg-slate-100 disabled:opacity-50 text-slate-600"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-6 text-slate-400 italic text-sm">Không có sản phẩm nào sắp hết hàng.</div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1359,6 +1426,58 @@ export const Dashboard: React.FC = () => {
             </>
           ) : (
             <div className="text-center py-6 text-slate-400 italic text-sm">Không nợ nhà cung cấp.</div>
+          )}
+        </div>
+
+        {/* Mobile Low Stock */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-lg text-slate-800 tracking-tight flex items-center gap-2">
+              <Box size={18} className="text-red-500" /> Sắp hết hàng
+            </h3>
+          </div>
+          {lowStockProducts.length > 0 ? (
+            <>
+              <div className="space-y-3">
+                {lowStockProducts.slice((lowStockPage - 1) * LOW_STOCK_ITEMS_PER_PAGE, lowStockPage * LOW_STOCK_ITEMS_PER_PAGE).map((p, i) => (
+                  <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <p className="font-bold text-sm text-slate-800 truncate">{p.name}</p>
+                      <p className="text-[11px] text-slate-500">{p.id}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-black text-red-600 text-sm tracking-tight">{p.stock} <span className="text-xs font-normal">sl</span></p>
+                      <p className="text-[10px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 inline-block mt-1">
+                        Tối thiểu: {p.lowStockThreshold ?? 5}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {lowStockProducts.length > LOW_STOCK_ITEMS_PER_PAGE && (
+                <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+                  <button 
+                    onClick={() => setLowStockPage(p => Math.max(1, p - 1))}
+                    disabled={lowStockPage === 1}
+                    className="p-1 rounded-md hover:bg-slate-100 disabled:opacity-50 text-slate-600"
+                  >
+                    <ChevronRight size={16} className="rotate-180" />
+                  </button>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {lowStockPage} / {Math.ceil(lowStockProducts.length / LOW_STOCK_ITEMS_PER_PAGE)}
+                  </span>
+                  <button 
+                    onClick={() => setLowStockPage(p => Math.min(Math.ceil(lowStockProducts.length / LOW_STOCK_ITEMS_PER_PAGE), p + 1))}
+                    disabled={lowStockPage >= Math.ceil(lowStockProducts.length / LOW_STOCK_ITEMS_PER_PAGE)}
+                    className="p-1 rounded-md hover:bg-slate-100 disabled:opacity-50 text-slate-600"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-6 text-slate-400 italic text-sm">Không có sản phẩm nào sắp hết hàng.</div>
           )}
         </div>
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { User } from '../types';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { Plus, Search, Edit2, Trash2, Shield, User as UserIcon, Mail, Key, X, Check, AlertCircle } from 'lucide-react';
 
 const Users: React.FC = () => {
@@ -84,6 +85,9 @@ const Users: React.FC = () => {
       </div>
     );
   }
+
+  useMobileBackModal(isModalOpen, () => setIsModalOpen(false)); // auto-injected
+  useMobileBackModal(!!editingUser, () => setEditingUser(null)); // auto-injected
 
   return (
     <div className="p-6 space-y-6">

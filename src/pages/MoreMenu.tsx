@@ -24,7 +24,8 @@ import {
   Database,
   Send,
   Wifi,
-  Camera
+  Camera,
+  CreditCard
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
@@ -47,6 +48,7 @@ export const MoreMenu: React.FC = () => {
         { label: 'Đặt hàng', icon: <ClipboardList className="text-blue-500" />, path: '#' },
         { label: 'Trả hàng', icon: <RotateCcw className="text-blue-500" />, path: '/return-sales' },
         { label: 'Sổ quỹ', icon: <Wallet className="text-blue-500" />, path: '/cash-ledger' },
+        { label: 'Quản lý ví', icon: <CreditCard className="text-blue-500" />, path: '/wallets' },
       ]
     },
     {

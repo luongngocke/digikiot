@@ -3,6 +3,7 @@ import { Search, Plus, Wifi, User, Phone, MapPin, Calendar, Trash2, Edit3, MoreH
 import { useAppContext } from '../context/AppContext';
 import { WifiRecord } from '../types';
 import { generateId } from '../lib/idUtils';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const WifiManagement: React.FC = () => {
   const { customers, wifiRecords, addWifiRecord, updateWifiRecord, deleteWifiRecord, currentUser } = useAppContext();
@@ -109,7 +110,11 @@ export const WifiManagement: React.FC = () => {
     }
   };
 
-  return (
+
+  useMobileBackModal(showAddModal, () => setShowAddModal(false)); // auto-injected
+  useMobileBackModal(showSuggestions, () => setShowSuggestions(false)); // auto-injected
+  useMobileBackModal(!!editingRecord, () => setEditingRecord(null)); // auto-injected
+return (
     <div className="flex flex-col gap-6 p-4 md:p-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

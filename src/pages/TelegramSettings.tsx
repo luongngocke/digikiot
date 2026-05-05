@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Send, Save, ArrowLeft, Bell, Info, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const TelegramSettings: React.FC = () => {
   const { telegramSettings, updateTelegramSettings } = useAppContext();

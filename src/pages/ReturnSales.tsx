@@ -5,6 +5,7 @@ import { ReturnSalesOrder } from '../types';
 import { formatNumber } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const ReturnSales: React.FC = () => {
   const { returnSalesOrders } = useAppContext();
@@ -12,6 +13,8 @@ export const ReturnSales: React.FC = () => {
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<ReturnSalesOrder | null>(null);
   
+  useMobileBackModal(!!selectedOrder, () => setSelectedOrder(null));
+
   // Use scroll lock for modal
   useScrollLock(!!selectedOrder);
 

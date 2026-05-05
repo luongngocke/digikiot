@@ -7,9 +7,10 @@ import { formatNumber, formatDateTime } from '../lib/utils';
 import { PrintTemplate } from '../components/PrintTemplate';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const Invoices: React.FC = () => {
-  const { invoices, customers, addCashTransaction, updateInvoice, returnSalesOrders, products } = useAppContext();
+  const { invoices, customers, addCashTransaction, updateInvoice, returnSalesOrders, products, wallets } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,6 +19,7 @@ export const Invoices: React.FC = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentWalletId, setPaymentWalletId] = useState('');
   
   // Lock scroll when modals are open
   useScrollLock(!!selectedInvoice || isPaymentModalOpen);
@@ -40,6 +42,11 @@ export const Invoices: React.FC = () => {
   const handlePayment = async () => {
     if (!selectedInvoice || isProcessingPayment) return;
     
+    if (!paymentWalletId) {
+      alert('Vui lòng chọn ví thanh toán!');
+      return;
+    }
+
     // Clean and parse the input amount
     const cleanAmountStr = paymentAmount.replace(/[^0-9]/g, '');
     if (!cleanAmountStr) return;
@@ -65,7 +72,8 @@ export const Invoices: React.FC = () => {
         category: 'DEBT_COLLECTION',
         partner: selectedInvoice.customer,
         note: `Thu nợ hóa đơn ${selectedInvoice.id}`,
-        refId: selectedInvoice.id
+        refId: selectedInvoice.id,
+        walletId: paymentWalletId
       });
 
       await updateInvoice(selectedInvoice.id, {
@@ -153,7 +161,10 @@ export const Invoices: React.FC = () => {
   const endIndex = startIndex + rowsPerPage;
   const paginatedInvoices = filteredInvoices.slice().reverse().slice(startIndex, endIndex);
 
-  return (
+
+  useMobileBackModal(isPaymentModalOpen, () => setIsPaymentModalOpen(false));
+  useMobileBackModal(!!selectedInvoice, () => setSelectedInvoice(null));
+return (
     <div className="flex flex-col px-4 md:px-0 py-4 md:py-0">
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col mx-auto w-full">
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-50/50 shrink-0">
@@ -631,6 +642,20 @@ export const Invoices: React.FC = () => {
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">đ</span>
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ví thanh toán</label>
+                <select
+                  value={paymentWalletId || ''}
+                  onChange={e => setPaymentWalletId(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 text-sm transition-colors cursor-pointer appearance-none"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em`, paddingRight: `2.5rem` }}
+                >
+                  <option value="" disabled>Chọn ví</option>
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">

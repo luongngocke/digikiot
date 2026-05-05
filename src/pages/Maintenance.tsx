@@ -211,6 +211,9 @@ export const Maintenance: React.FC = () => {
   useMobileBackModal(statusConfirmModal.isOpen, () => setStatusConfirmModal({ isOpen: false, newStatus: null, recordId: null }));
   useMobileBackModal(isInvoiceModalOpen, () => setIsInvoiceModalOpen(false));
   useMobileBackModal(isSerialModalOpen, () => setIsSerialModalOpen(false));
+  useMobileBackModal(customerSuggestions.length > 0, () => setCustomerSuggestions([]));
+  useMobileBackModal(externalDeviceSuggestions.length > 0, () => setExternalDeviceSuggestions([]));
+  useMobileBackModal(isEditingRecord, () => setIsEditingRecord(false));
 
   // Lock scroll when any modal is open
   useScrollLock(
@@ -532,7 +535,8 @@ export const Maintenance: React.FC = () => {
     }
   };
 
-  return (
+
+return (
     <div className="flex flex-col px-4 md:px-0 py-4 md:py-0">
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 shrink-0">
         <div className="flex-1 flex flex-col md:flex-row items-center gap-3">
@@ -683,9 +687,16 @@ export const Maintenance: React.FC = () => {
                     <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
                       <User size={16} />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-bold text-sm text-slate-800">{r.customerName}</p>
-                      <p className="text-xs text-slate-400 font-medium">{r.customerPhone}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-slate-400 font-medium">{r.customerPhone}</p>
+                        {r.customerPhone && (
+                          <a href={`tel:${r.customerPhone}`} onClick={(e) => e.stopPropagation()} className="p-1 px-1.5 bg-emerald-50 text-emerald-600 rounded-full hover:bg-emerald-100 transition-colors">
+                            <Phone size={10} className="fill-emerald-600 text-transparent" />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
 

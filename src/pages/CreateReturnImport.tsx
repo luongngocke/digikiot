@@ -4,10 +4,11 @@ import { useAppContext } from '../context/AppContext';
 import { Product, ImportItem, Supplier, CashTransaction, ReturnImportOrder, ImportOrder } from '../types';
 import { formatNumber, parseFormattedNumber } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export const CreateReturnImport: React.FC = () => {
-  const { products, suppliers, importOrders, addReturnImportOrder, updateImportOrder, updateProduct, addStockCard, addCashTransaction, returnImportOrders, serials } = useAppContext();
+  const { products, suppliers, importOrders, addReturnImportOrder, updateImportOrder, updateProduct, addStockCard, addCashTransaction, returnImportOrders, serials, wallets } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,6 +20,7 @@ export const CreateReturnImport: React.FC = () => {
   const [overallDiscount, setOverallDiscount] = useState(0);
   const [receivedAmount, setReceivedAmount] = useState<number>(0);
   const [note, setNote] = useState('');
+  const [walletId, setWalletId] = useState<string>('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Handle pre-fill from location state
@@ -66,7 +68,8 @@ export const CreateReturnImport: React.FC = () => {
       }
     }, 300);
 
-    return () => clearTimeout(handler);
+
+return () => clearTimeout(handler);
   }, [searchTerm, importOrders]);
 
   const handleSelectOrder = (order: ImportOrder) => {
@@ -139,6 +142,7 @@ export const CreateReturnImport: React.FC = () => {
   const handleCreateReturn = () => {
     if (selectedItems.length === 0) return alert('Vui lòng chọn ít nhất một sản phẩm để trả!');
     if (!selectedSupplier) return alert('Vui lòng chọn nhà cung cấp!');
+    if (receivedAmount > 0 && !walletId) return alert('Vui lòng chọn nguồn tiền chi trả!');
     
     for (let item of selectedItems) {
       if (item.hasSerial && item.qty === 0) {
@@ -215,7 +219,8 @@ export const CreateReturnImport: React.FC = () => {
         category: 'OTHER',
         partner: selectedSupplier!.name,
         note: `Thu tiền trả hàng nhập ${returnId}`,
-        refId: returnId
+        refId: returnId,
+        walletId: walletId
       };
       addCashTransaction(newTransaction);
     }
@@ -229,6 +234,9 @@ export const CreateReturnImport: React.FC = () => {
     setShowConfirmModal(false);
     navigate('/return-import');
   };
+
+  useMobileBackModal(orderSuggestions.length > 0, () => setOrderSuggestions([]));
+  useMobileBackModal(showConfirmModal, () => setShowConfirmModal(false)); // auto-injected
 
   return (
     <div className="flex flex-col lg:flex-row bg-slate-50 relative">
@@ -456,6 +464,22 @@ export const CreateReturnImport: React.FC = () => {
                 className="w-32 text-right border border-slate-200 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold outline-none focus:border-blue-500 text-emerald-600" 
               />
             </div>
+            {receivedAmount > 0 && (
+              <div className="flex justify-between items-center bg-emerald-50 p-2 rounded-lg border border-emerald-100 mt-2">
+                <span className="text-sm font-medium text-emerald-700">Ví nhận tiền</span>
+                <select
+                  value={walletId || ''}
+                  onChange={e => setWalletId(e.target.value)}
+                  className="w-32 text-right border border-emerald-200 rounded-lg bg-white px-2 py-1.5 text-xs font-semibold outline-none focus:border-emerald-500 text-emerald-700 appearance-none bg-no-repeat"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23047857' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.2rem center`, backgroundSize: `1.2em 1.2em`, paddingRight: `1.5rem` }}
+                >
+                  <option value="" disabled>Chọn ví</option>
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex justify-between items-center pt-2 border-t border-slate-100">
               <span className="text-sm font-bold text-red-600">NCC còn nợ</span>
               <span className="text-base font-bold text-red-600">{formatNumber(finalTotal - receivedAmount)}</span>

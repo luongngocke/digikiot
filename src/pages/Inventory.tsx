@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Box, Wrench, Barcode, X, ArrowDownLeft, ArrowUpRight, FileText, Calendar, User, Package, CreditCard, Truck, Star, Settings, HelpCircle, LayoutGrid, Download, Upload, ChevronDown, Filter, Edit3, Image as ImageIcon, RotateCcw, ExternalLink, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, Plus, Box, Wrench, Barcode, X, ArrowDownLeft, ArrowUpRight, FileText, Calendar, User, Package, CreditCard, Truck, Star, Settings, HelpCircle, LayoutGrid, Download, Upload, ChevronDown, Filter, Edit3, Image as ImageIcon, RotateCcw, ExternalLink, Printer, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Product, Invoice, ImportOrder, ReturnImportOrder, ReturnSalesOrder } from '../types';
 import { formatNumber, parseFormattedNumber } from '../lib/utils';
@@ -16,8 +16,17 @@ import { AnimatePresence } from 'motion/react';
 
 export const Inventory: React.FC = () => {
   const navigate = useNavigate();
-  const { products, addProduct, stockCards, invoices, importOrders, serials, updateProduct, suppliers, setImportDraft, returnImportOrders, returnSalesOrders } = useAppContext();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const { products, addProduct, stockCards, invoices, importOrders, serials, updateProduct, suppliers, setImportDraft, returnImportOrders, returnSalesOrders, brands, categories } = useAppContext();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+
+  useEffect(() => {
+    const q = searchParams.get('search');
+    if (q) {
+      setSearchTerm(q);
+    }
+  }, [searchParams]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   useMobileBackModal(isModalOpen, () => setIsModalOpen(false));
@@ -43,7 +52,8 @@ export const Inventory: React.FC = () => {
 
   const hasChanges = () => {
     if (selectedProduct) {
-      return (
+
+return (
         name !== selectedProduct.name ||
         pType !== (selectedProduct.isService ? 'service' : 'product') ||
         parseFormattedNumber(price) !== selectedProduct.price ||
@@ -55,6 +65,8 @@ export const Inventory: React.FC = () => {
         category !== (selectedProduct.category || '') ||
         brand !== (selectedProduct.brand || '') ||
         expectedOutOfStock !== (selectedProduct.expectedOutOfStock || '') ||
+        lowStockThreshold !== (selectedProduct.lowStockThreshold?.toString() || '') ||
+        pStatus !== (selectedProduct.status || 'Đang kinh doanh') ||
         image !== selectedProduct.image
       );
     }
@@ -106,23 +118,38 @@ export const Inventory: React.FC = () => {
   const [category, setCategory] = useState('');
   const [brand, setBrand] = useState('');
   const [expectedOutOfStock, setExpectedOutOfStock] = useState('');
+  const [lowStockThreshold, setLowStockThreshold] = useState('');
+  const [pStatus, setPStatus] = useState<'Đang kinh doanh' | 'Ngừng kinh doanh'>('Đang kinh doanh');
   const [image, setImage] = useState<string | undefined>(undefined);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
+  const [statusFilter, setStatusFilter] = useState<'Đang kinh doanh' | 'Ngừng kinh doanh' | 'ALL'>('Đang kinh doanh');
+  const [activeFilter, setActiveFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const filteredProducts = useMemo(() => {
-    if (!searchTerm.trim()) return products || [];
-    return (products || []).filter(p => 
+    let result = products || [];
+    
+    if (statusFilter !== 'ALL') {
+      result = result.filter(p => (p.status || 'Đang kinh doanh') === statusFilter);
+    }
+
+    if (activeFilter === 'LOW_STOCK') {
+      result = result.filter(p => !p.isService && p.stock !== null && p.stock < (p.lowStockThreshold ?? 5));
+    }
+
+    if (!searchTerm.trim()) return result;
+    
+    return result.filter(p => 
       (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
       (p.id || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [products, searchTerm]);
+  }, [products, searchTerm, activeFilter, statusFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, rowsPerPage]);
+  }, [searchTerm, activeFilter, statusFilter, rowsPerPage]);
 
   const totalPages = Math.ceil(filteredProducts.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -141,6 +168,8 @@ export const Inventory: React.FC = () => {
     setCategory('');
     setBrand('');
     setExpectedOutOfStock('');
+    setLowStockThreshold('');
+    setPStatus('Đang kinh doanh');
     setImage(undefined);
   };
 
@@ -166,6 +195,8 @@ export const Inventory: React.FC = () => {
         category,
         brand,
         expectedOutOfStock,
+        lowStockThreshold: Number(lowStockThreshold) || 0,
+        status: pStatus,
         image
       });
     } else {
@@ -186,6 +217,8 @@ export const Inventory: React.FC = () => {
         category,
         brand,
         expectedOutOfStock,
+        lowStockThreshold: Number(lowStockThreshold) || 0,
+        status: pStatus,
         image
       });
     }
@@ -208,6 +241,8 @@ export const Inventory: React.FC = () => {
         category,
         brand,
         expectedOutOfStock,
+        lowStockThreshold: Number(lowStockThreshold) || 0,
+        status: pStatus,
         image
       });
     } else {
@@ -323,6 +358,8 @@ export const Inventory: React.FC = () => {
 
   const totalStock = filteredProducts.reduce((sum, p) => sum + (p.stock || 0), 0);
 
+  useMobileBackModal(isLibraryOpen, () => setIsLibraryOpen(false)); // auto-injected
+
   return (
     <div className="flex flex-col bg-slate-50 md:bg-white">
       {/* Toolbar */}
@@ -337,7 +374,26 @@ export const Inventory: React.FC = () => {
             placeholder="Theo mã, tên hàng" 
             className="flex-1 bg-transparent text-sm font-medium outline-none"
           />
-          <Filter className="text-slate-400 cursor-pointer hover:text-blue-600" size={18} />
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 outline-none focus:border-blue-400"
+          >
+            <option value="Đang kinh doanh">⚡ Đang kinh doanh</option>
+            <option value="Ngừng kinh doanh">🚫 Ngừng kinh doanh</option>
+            <option value="ALL">📦 Tất cả</option>
+          </select>
+
+          <button 
+            onClick={() => setActiveFilter(activeFilter === 'ALL' ? 'LOW_STOCK' : 'ALL')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all border shrink-0 ${activeFilter === 'LOW_STOCK' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+          >
+            <AlertTriangle size={16} />
+            Sắp hết hàng
+          </button>
         </div>
 
         {/* Right: Actions */}
@@ -372,19 +428,15 @@ export const Inventory: React.FC = () => {
                 <th className="p-3">ĐVT</th>
                 <th className="p-3">Nhóm hàng</th>
                 <th className="p-3">Thương hiệu</th>
+                <th className="p-3">Trạng thái</th>
                 <th className="p-3 text-right">Giá bán</th>
                 <th className="p-3 text-right">Giá vốn</th>
                 <th className="p-3 text-right">Tồn kho</th>
-                <th className="p-3 text-right">Khách đặt</th>
-                <th className="p-3 text-right">Thời gian tạo</th>
-                <th className="p-3 text-right">Dự kiến hết hàng</th>
               </tr>
               {/* Summary Row */}
               <tr className="bg-slate-50/50 text-slate-800 text-[13px] font-bold border-b border-slate-100">
-                <td colSpan={7}></td>
+                <td colSpan={11}></td>
                 <td className="p-3 text-right">{formatNumber(totalStock)}</td>
-                <td className="p-3 text-right">0</td>
-                <td colSpan={2}></td>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -410,12 +462,21 @@ export const Inventory: React.FC = () => {
                   <td className="p-3 text-slate-500">{p.unit || '---'}</td>
                   <td className="p-3 text-slate-500">{p.category || '---'}</td>
                   <td className="p-3 text-slate-500">{p.brand || '---'}</td>
+                  <td className="p-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      (p.status || 'Đang kinh doanh') === 'Đang kinh doanh' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {p.status || 'Đang kinh doanh'}
+                    </span>
+                  </td>
                   <td className="p-3 text-right font-bold">{formatNumber(p.price)}</td>
                   <td className="p-3 text-right">{formatNumber(p.importPrice || 0)}</td>
-                  <td className="p-3 text-right font-bold text-slate-800">{p.stock ?? '---'}</td>
-                  <td className="p-3 text-right">0</td>
-                  <td className="p-3 text-right text-slate-400">11/02/2026 21:00</td>
-                  <td className="p-3 text-right text-slate-400">{p.expectedOutOfStock || '---'}</td>
+                  <td className={`p-3 text-right font-bold ${p.stock !== null && p.stock < (p.lowStockThreshold ?? 5) && !p.isService ? 'text-red-500' : 'text-slate-800'}`}>
+                    {p.stock ?? '---'}
+                    {p.stock !== null && p.stock < (p.lowStockThreshold ?? 5) && !p.isService && (
+                      <span className="ml-1 inline-flex w-2 h-2 rounded-full bg-red-500" title="Tồn kho thấp"></span>
+                     )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -455,7 +516,7 @@ export const Inventory: React.FC = () => {
                 </div>
                 <div className="text-right pl-3 border-l border-slate-100 shrink-0 min-w-[65px]">
                   <p className="text-[9px] text-slate-400 font-bold tracking-widest mb-1">{p.isService ? 'Trạng thái' : 'Tồn kho'}</p>
-                  <p className={`font-bold ${p.isService ? 'text-emerald-500 text-xs sm:text-sm' : 'text-slate-800 text-lg sm:text-xl'}`}>
+                  <p className={`font-bold ${p.isService ? 'text-emerald-500 text-xs sm:text-sm' : (p.stock !== null && p.stock < (p.lowStockThreshold ?? 5) ? 'text-red-500 text-lg sm:text-xl' : 'text-slate-800 text-lg sm:text-xl')}`}>
                     {p.isService ? 'Sẵn sàng' : p.stock}
                   </p>
                 </div>
@@ -524,6 +585,8 @@ export const Inventory: React.FC = () => {
             setCategory(p.category || '');
             setBrand(p.brand || '');
             setExpectedOutOfStock(p.expectedOutOfStock || '');
+            setLowStockThreshold(p.lowStockThreshold?.toString() || '');
+            setPStatus((p.status as any) || 'Đang kinh doanh');
             setImage(p.image);
             setIsModalOpen(true);
           }}
@@ -990,9 +1053,13 @@ export const Inventory: React.FC = () => {
                     type="text" 
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
+                    list="category-suggestions"
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
                     placeholder="Linh kiện..." 
                   />
+                  <datalist id="category-suggestions">
+                    {categories.map((c, i) => <option key={`${c.id}-${i}`} value={c.name} />)}
+                  </datalist>
                 </div>
 
                 <div>
@@ -1001,9 +1068,13 @@ export const Inventory: React.FC = () => {
                     type="text" 
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
+                    list="brand-suggestions"
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
                     placeholder="Samsung, Dell..." 
                   />
+                  <datalist id="brand-suggestions">
+                    {brands.map((b, i) => <option key={`${b.id}-${i}`} value={b.name} />)}
+                  </datalist>
                 </div>
 
                 <div>
@@ -1014,6 +1085,29 @@ export const Inventory: React.FC = () => {
                     onChange={(e) => setExpectedOutOfStock(e.target.value)}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 ml-1">Cảnh báo tồn kho thấp</label>
+                  <input 
+                    type="number" 
+                    value={lowStockThreshold}
+                    onChange={(e) => setLowStockThreshold(e.target.value)}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    placeholder="VD: 5"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 ml-1">Trạng thái</label>
+                  <select
+                    value={pStatus}
+                    onChange={(e) => setPStatus(e.target.value as any)}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm"
+                  >
+                    <option value="Đang kinh doanh">⚡ Đang kinh doanh</option>
+                    <option value="Ngừng kinh doanh">🚫 Ngừng kinh doanh</option>
+                  </select>
                 </div>
               </div>
             </div>

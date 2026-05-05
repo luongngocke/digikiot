@@ -7,10 +7,11 @@ import { formatNumber, parseFormattedNumber } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
 import { PrintTemplate } from '../components/PrintTemplate';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const Suppliers: React.FC = () => {
   const navigate = useNavigate();
-  const { suppliers, addSupplier, importOrders, updateImportOrder, addCashTransaction, setImportDraft, cashTransactions } = useAppContext();
+  const { suppliers, addSupplier, importOrders, updateImportOrder, addCashTransaction, setImportDraft, cashTransactions, wallets } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
@@ -97,7 +98,13 @@ export const Suppliers: React.FC = () => {
     setIsPaymentModalOpen(true);
   };
 
+  const [paymentWalletId, setPaymentWalletId] = useState<string>('');
+
   const executePayment = () => {
+    if (!paymentWalletId) {
+      alert('Vui lòng chọn ví thanh toán!');
+      return;
+    }
     const payValue = parseFormattedNumber(paymentAmount);
     if (isNaN(payValue) || payValue <= 0) return alert('Số tiền không hợp lệ');
 
@@ -110,7 +117,8 @@ export const Suppliers: React.FC = () => {
       category: 'DEBT_PAYMENT',
       partner: selectedSupplier?.name || '',
       note: paymentType === 'SINGLE' ? `Thanh toán nợ đơn ${targetOrderId}` : `Thanh toán tổng nợ NCC ${selectedSupplier?.name}`,
-      refId: targetOrderId || undefined
+      refId: targetOrderId || undefined,
+      walletId: paymentWalletId
     };
 
     if (paymentType === 'SINGLE' && targetOrderId) {
@@ -186,7 +194,12 @@ export const Suppliers: React.FC = () => {
     navigate('/create-return-import', { state: { preFillOrder: order } });
   };
 
-  return (
+
+  useMobileBackModal(isModalOpen, () => setIsModalOpen(false)); // auto-injected
+  useMobileBackModal(isPaymentModalOpen, () => setIsPaymentModalOpen(false)); // auto-injected
+  useMobileBackModal(!!selectedSupplier, () => setSelectedSupplier(null));
+  useMobileBackModal(!!selectedOrder, () => setSelectedOrder(null));
+return (
     <div className="flex flex-col bg-slate-50 md:bg-white">
       {/* Print Template Container */}
       {printData && <PrintTemplate {...printData} />}
@@ -727,6 +740,20 @@ export const Suppliers: React.FC = () => {
                     ? "Hệ thống sẽ tự động trừ nợ cho các đơn hàng cũ nhất trước (FIFO)."
                     : "Số tiền sẽ được trừ trực tiếp vào đơn hàng đang chọn."}
                 </p>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ví thanh toán</label>
+                <select
+                  value={paymentWalletId || ''}
+                  onChange={e => setPaymentWalletId(e.target.value)}
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-400 text-slate-700 shadow-inner appearance-none relative"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em`, paddingRight: `2.5rem` }}
+                >
+                  <option value="" disabled>Chọn ví</option>
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
               </div>
               <button 
                 onClick={executePayment}

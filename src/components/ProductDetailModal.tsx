@@ -3,6 +3,7 @@ import { X, ArrowDownLeft, ArrowUpRight, Barcode, Search, Edit3, Image as ImageI
 import { useAppContext } from '../context/AppContext';
 import { Product, Invoice, ImportOrder, ReturnImportOrder, ReturnSalesOrder } from '../types';
 import { formatNumber } from '../lib/utils';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 interface ProductDetailModalProps {
   product: Product;
@@ -23,6 +24,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [stockFilter, setStockFilter] = useState<'ALL' | 'IN' | 'OUT'>('ALL');
   const [serialSearchTerm, setSerialSearchTerm] = useState('');
   const [serialStatusTab, setSerialStatusTab] = useState<'ALL' | 'IN_STOCK' | 'SOLD'>('IN_STOCK');
+
+  useMobileBackModal(!!product, onClose);
 
   const productStockHistory = useMemo(() => {
     // ... logic remains the same ...
@@ -209,6 +212,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Thương hiệu</span>
                     <p className="text-sm font-black text-slate-700 leading-none truncate">
                       {product.brand || '---'}
+                    </p>
+                  </div>
+
+                  <div className={`px-4 py-3 rounded-xl border flex flex-col justify-center ${
+                    (product.status || 'Đang kinh doanh') === 'Đang kinh doanh' ? 'bg-[#f0fdfa] border-[#ccfbf1]' : 'bg-[#fff5f5] border-[#fee2e2]'
+                  }`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
+                      (product.status || 'Đang kinh doanh') === 'Đang kinh doanh' ? 'text-teal-600' : 'text-rose-600'
+                    }`}>Trạng thái</span>
+                    <p className={`text-sm font-black leading-none truncate ${
+                      (product.status || 'Đang kinh doanh') === 'Đang kinh doanh' ? 'text-teal-700' : 'text-rose-700'
+                    }`}>
+                      {product.status || 'Đang kinh doanh'}
                     </p>
                   </div>
 

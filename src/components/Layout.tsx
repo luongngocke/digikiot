@@ -1,14 +1,31 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Store, Search, Truck, Bell, Settings, ChevronDown, ShoppingCart, Home, Box, FileText, Users, Package, History, RotateCcw, ClipboardList, PlusCircle, Tag, ShieldCheck, Wallet, LogOut, Menu, ArrowLeftRight, Printer, DollarSign, Wrench, Send, Wifi } from 'lucide-react';
+import { Store, Search, Truck, Bell, Settings, ChevronDown, ShoppingCart, Home, Box, FileText, Users, Package, History, RotateCcw, ClipboardList, PlusCircle, Tag, ShieldCheck, Wallet, LogOut, Menu, ArrowLeftRight, Printer, DollarSign, Wrench, Send, Wifi, RefreshCw } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const Layout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout } = useAppContext();
+  const { currentUser, logout, syncData, products } = useAppContext();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useMobileBackModal(activeDropdown !== null, () => setActiveDropdown(null));
+  useMobileBackModal(showUserMenu, () => setShowUserMenu(false));
+  useMobileBackModal(showNotifications, () => setShowNotifications(false));
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    await syncData();
+    setIsSyncing(false);
+  };
+
+  const lowStockProducts = React.useMemo(() => {
+    return products?.filter(p => (p.status || 'Đang kinh doanh') === 'Đang kinh doanh' && !p.isService && p.stock !== null && p.stock < (p.lowStockThreshold ?? 5)) || [];
+  }, [products]);
 
   // Scroll to top on route change
   React.useEffect(() => {
@@ -203,6 +220,15 @@ export const Layout: React.FC = () => {
             </Link>
             
             <div className="flex items-center gap-4 md:gap-6">
+              <button
+                onClick={handleSync}
+                disabled={isSyncing}
+                title="Đồng bộ dữ liệu"
+                className={`p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors border border-blue-100 ${isSyncing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
+              </button>
+              
               {/* Mobile Title Replacement for Icons */}
               <div className="md:hidden">
                 <span className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
@@ -220,7 +246,39 @@ export const Layout: React.FC = () => {
               </div>
               <div className="hidden md:flex items-center gap-5 text-slate-500">
                 <Truck className="cursor-pointer hover:text-blue-600 transition-colors" size={18} />
-                <Bell className="cursor-pointer hover:text-blue-600 transition-colors" size={18} />
+                <div className="relative cursor-pointer" onClick={() => setShowNotifications(!showNotifications)}>
+                  <Bell className="hover:text-blue-600 transition-colors" size={18} />
+                  {lowStockProducts.length > 0 && (
+                    <span className="absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold border-2 border-white leading-none">
+                      {lowStockProducts.length > 99 ? '99+' : lowStockProducts.length}
+                    </span>
+                  )}
+                  {showNotifications && (
+                    <div className="absolute top-full right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl py-2 z-50 border border-slate-200">
+                      <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-lg">
+                        <h4 className="font-bold text-slate-800 text-sm">Thông báo ({lowStockProducts.length})</h4>
+                      </div>
+                      <div className="max-h-[300px] overflow-y-auto">
+                        {lowStockProducts.length > 0 ? (
+                          lowStockProducts.map(p => (
+                            <Link key={p.id} to={`/inventory?search=${encodeURIComponent(p.id)}`} className="flex items-start gap-3 p-3 hover:bg-rose-50/50 border-b border-slate-50 transition-colors last:border-0" onClick={() => setShowNotifications(false)}>
+                              <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                                <Box size={14} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-slate-800 truncate">{p.name}</p>
+                                <p className="text-[10px] font-medium text-slate-500 truncate">{p.id}</p>
+                                <p className="text-xs font-black text-rose-600 mt-1">Tồn kho hiện tại: {p.stock}</p>
+                              </div>
+                            </Link>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-sm text-slate-500">Không có thông báo mới</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <Settings className="cursor-pointer hover:text-blue-600 transition-colors" size={18} />
               </div>
               <div 

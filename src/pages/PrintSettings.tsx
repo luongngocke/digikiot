@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Printer, Save, ArrowLeft, Store, MapPin, Phone, Mail, CreditCard, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const PrintSettings: React.FC = () => {
   const { printSettings, updatePrintSettings } = useAppContext();

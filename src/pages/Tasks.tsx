@@ -32,8 +32,9 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Task, TelegramSettings, Customer, Invoice, MaintenanceRecord } from '../types';
-import { formatDateTime } from '../lib/utils';
+import { formatDateTime, parseDateString } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Tasks: React.FC = () => {
@@ -54,7 +55,7 @@ export const Tasks: React.FC = () => {
   const location = useLocation();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<Task['status'] | 'ALL'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<Task['status'] | 'ALL' | 'NOT_COMPLETED'>('NOT_COMPLETED');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<Task | null>(null);
@@ -213,11 +214,30 @@ export const Tasks: React.FC = () => {
     resetForm();
   };
 
+  const getPriorityWeight = (p: Task['priority']) => {
+    switch (p) {
+      case 'CRITICAL': return 4;
+      case 'HIGH': return 3;
+      case 'MEDIUM': return 2;
+      case 'LOW': return 1;
+      default: return 0;
+    }
+  };
+
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' 
+      ? true 
+      : statusFilter === 'NOT_COMPLETED' 
+        ? t.status !== 'COMPLETED' 
+        : t.status === statusFilter;
     return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    const priorityDiff = getPriorityWeight(b.priority) - getPriorityWeight(a.priority);
+    if (priorityDiff !== 0) return priorityDiff;
+    
+    return parseDateString(b.createdAt) - parseDateString(a.createdAt);
   });
 
   const getPriorityColor = (p: Task['priority']) => {
@@ -242,6 +262,12 @@ export const Tasks: React.FC = () => {
     return <MapPin size={16} fill="currentColor" className="text-rose-500" />;
   };
 
+  useMobileBackModal(isModalOpen, () => setIsModalOpen(false)); // auto-injected
+  useMobileBackModal(showCustomerResults, () => setShowCustomerResults(false)); // auto-injected
+  useMobileBackModal(!!selectedTaskDetail, () => setSelectedTaskDetail(null));
+  useMobileBackModal(!!statusConfirm, () => setStatusConfirm(null));
+  useMobileBackModal(!!editingTask, () => setEditingTask(null));
+
   return (
     <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
       {/* Header */}
@@ -255,7 +281,7 @@ export const Tasks: React.FC = () => {
           </h1>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
             <button 
-              onClick={() => setStatusFilter('ALL')}
+              onClick={() => setStatusFilter('NOT_COMPLETED')}
               className="text-[10px] font-black text-rose-600 uppercase tracking-tight flex items-center gap-1 hover:opacity-80 transition-opacity"
             >
               <ClipboardList size={12} />
@@ -301,6 +327,12 @@ export const Tasks: React.FC = () => {
       {/* Filters Bar - Compact for Mobile */}
       <div className="bg-white border-b border-slate-100 px-4 md:px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0 scroll-smooth no-scrollbar">
         <button 
+          onClick={() => setStatusFilter('NOT_COMPLETED')}
+          className={`px-3 py-1.5 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black whitespace-nowrap transition-all ${statusFilter === 'NOT_COMPLETED' ? 'bg-blue-600 text-white shadow-md shadow-blue-100' : 'text-slate-500 hover:bg-slate-100'}`}
+        >
+          CÒN LẠI ({tasks.filter(t => t.status !== 'COMPLETED').length})
+        </button>  
+        <button 
           onClick={() => setStatusFilter('ALL')}
           className={`px-3 py-1.5 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black whitespace-nowrap transition-all ${statusFilter === 'ALL' ? 'bg-blue-600 text-white shadow-md shadow-blue-100' : 'text-slate-500 hover:bg-slate-100'}`}
         >
@@ -341,11 +373,7 @@ export const Tasks: React.FC = () => {
                 </button>
               </div>
             ) : (
-              filteredTasks.sort((a, b) => {
-                const priorityOrder = { 'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3 };
-                const statusOrder = { 'OPEN': 0, 'TODO': 1, 'ACCEPTED': 2, 'IN_PROGRESS': 3, 'COMPLETED': 4, 'CANCELLED': 5 };
-                return statusOrder[a.status] - statusOrder[b.status] || priorityOrder[a.priority] - priorityOrder[b.priority];
-              }).map(task => (
+              filteredTasks.map(task => (
                 <motion.div 
                   layout
                   initial={{ opacity: 0, y: 10 }}

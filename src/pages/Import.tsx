@@ -149,7 +149,7 @@ export const Import: React.FC = () => {
     const handler = setTimeout(() => {
       if (searchTerm.trim()) {
         const filtered = (products || []).filter(p => 
-          !p.isService && (
+          !p.isService && (p.status || 'Đang kinh doanh') === 'Đang kinh doanh' && (
             (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
             (p.id || '').toLowerCase().includes(searchTerm.toLowerCase())
           )
@@ -428,6 +428,15 @@ export const Import: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  useMobileBackModal(isSupplierModalOpen, () => setIsSupplierModalOpen(false)); // auto-injected
+  useMobileBackModal(isProductModalOpen, () => setIsProductModalOpen(false)); // auto-injected
+  useMobileBackModal(isMobileProductSearchOpen, () => setIsMobileProductSearchOpen(false)); // auto-injected
+  useMobileBackModal(isMobileSupplierSearchOpen, () => setIsMobileSupplierSearchOpen(false)); // auto-injected
+  useMobileBackModal(isMobileCheckoutOpen, () => setIsMobileCheckoutOpen(false)); // auto-injected
+  useMobileBackModal(showConfirmModal, () => setShowConfirmModal(false)); // auto-injected
+  useMobileBackModal(!!showSuccessModal, () => setShowSuccessModal(false));
+  useMobileBackModal(!!viewingProduct, () => setViewingProduct(null));
 
   return (
     <>
@@ -1450,7 +1459,8 @@ export const Import: React.FC = () => {
                     color: colors[products.length % colors.length],
                     unit: newUnit,
                     category: newCategory,
-                    isService: false
+                    isService: false,
+                    status: 'Đang kinh doanh'
                   };
                   
                   addProduct(newProd);

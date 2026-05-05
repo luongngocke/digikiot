@@ -5,6 +5,7 @@ import { generateId } from '../lib/idUtils';
 import { ExternalSerial, Customer, MaintenanceRecord } from '../types';
 import { formatNumber } from '../lib/utils';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const ExternalSerials: React.FC = () => {
   const { externalSerials, addExternalSerial, updateExternalSerial, deleteExternalSerial, currentUser, customers, addCustomer, maintenanceRecords } = useAppContext();
@@ -32,7 +33,8 @@ export const ExternalSerials: React.FC = () => {
   const filteredSerials = useMemo(() => {
     if (!searchTerm.trim()) return externalSerials || [];
     const term = searchTerm.toLowerCase();
-    return (externalSerials || []).filter(s => 
+
+return (externalSerials || []).filter(s => 
       (s.sn || '').toLowerCase().includes(term) ||
       (s.product || '').toLowerCase().includes(term) ||
       (s.customer || '').toLowerCase().includes(term) ||
@@ -96,6 +98,11 @@ export const ExternalSerials: React.FC = () => {
 
     setIsModalOpen(false);
   };
+
+  useMobileBackModal(isModalOpen, () => setIsModalOpen(false)); // auto-injected
+  useMobileBackModal(showCustomerDropdown, () => setShowCustomerDropdown(false)); // auto-injected
+  useMobileBackModal(isCustomerModalOpen, () => setIsCustomerModalOpen(false)); // auto-injected
+  useMobileBackModal(!!selectedSerialDetail, () => setSelectedSerialDetail(null));
 
   return (
     <div className="flex flex-col h-[calc(100vh-[96px])] bg-white md:rounded-xl shadow-sm border border-slate-200 md:m-6 overflow-hidden">

@@ -6,6 +6,7 @@ import { ImportOrder } from '../types';
 import { formatNumber } from '../lib/utils';
 import { PrintTemplate } from '../components/PrintTemplate';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const ImportHistory: React.FC = () => {
   const { importOrders, suppliers, setImportDraft, updateImportOrder, addCashTransaction, cashTransactions, wallets } = useAppContext();
@@ -151,7 +152,10 @@ export const ImportHistory: React.FC = () => {
   const endIndex = startIndex + rowsPerPage;
   const paginatedOrders = filteredOrders.slice().reverse().slice(startIndex, endIndex);
 
-  return (
+
+  useMobileBackModal(isPaymentModalOpen, () => setIsPaymentModalOpen(false)); // auto-injected
+  useMobileBackModal(!!selectedOrder, () => setSelectedOrder(null));
+return (
     <div className="flex flex-col px-4 md:px-0 py-4 md:py-0">
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col mx-auto w-full">
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-50/50 shrink-0">
@@ -563,7 +567,7 @@ export const ImportHistory: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ví thanh toán</label>
                 <select
-                  value={paymentWalletId}
+                  value={paymentWalletId || ''}
                   onChange={e => setPaymentWalletId(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 text-sm transition-colors cursor-pointer appearance-none"
                   style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em`, paddingRight: `2.5rem` }}

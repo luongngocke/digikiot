@@ -154,7 +154,8 @@ export const POS: React.FC = () => {
   const { addProduct } = useAppContext();
 
   const hasQuickAddChanges = () => {
-    return (
+
+return (
       quickAddName !== '' ||
       quickAddPrice !== '' ||
       quickAddId !== '' ||
@@ -200,7 +201,8 @@ export const POS: React.FC = () => {
       stock: quickAddIsService ? null : (Number(quickAddStock) || 0),
       hasSerial: quickAddIsService ? false : quickAddHasSerial,
       isService: quickAddIsService,
-      color: 'bg-blue-600'
+      color: 'bg-blue-600',
+      status: 'Đang kinh doanh'
     };
     
     addProduct(newProduct);
@@ -277,8 +279,10 @@ export const POS: React.FC = () => {
     const handler = setTimeout(() => {
       if (searchTerm.trim()) {
         const filtered = (products || []).filter(p => 
-          (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-          (p.id || '').toLowerCase().includes(searchTerm.toLowerCase())
+          (p.status || 'Đang kinh doanh') === 'Đang kinh doanh' && (
+            (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (p.id || '').toLowerCase().includes(searchTerm.toLowerCase())
+          )
         );
         setProductSuggestions(filtered.slice(0, 30));
       } else {
@@ -394,6 +398,13 @@ export const POS: React.FC = () => {
     if (cart.length === 0) return alert('Giỏ hàng trống!');
     if (isCheckingOut) return;
 
+    const finalWalletId = currentTab.walletId || (wallets.length > 0 ? wallets[0].id : undefined);
+    
+    if (paidAmount > 0 && !finalWalletId && wallets.length > 0) {
+      alert('Vui lòng chọn nguồn tiền nhận thanh toán!');
+      return;
+    }
+
     // Handle Edit Mode Confirmation
     if (currentTab.editingInvoiceId && !checkoutConfirmModal?.isOpen) {
       setCheckoutConfirmModal({ isOpen: true, type: 'EDIT' });
@@ -461,7 +472,7 @@ export const POS: React.FC = () => {
           partner: customerName,
           note: `Thu tiền hóa đơn ${invoiceId}`,
           refId: invoiceId,
-          walletId: currentTab.walletId
+          walletId: finalWalletId
         };
         addCashTransaction(newTransaction);
       }
@@ -524,6 +535,16 @@ export const POS: React.FC = () => {
     setPOSDraft({ activeTab, tabs });
     alert("Đã lưu tạm đơn hàng!");
   };
+
+  useMobileBackModal(isCustomerModalOpen, () => setIsCustomerModalOpen(false)); // auto-injected
+  useMobileBackModal(isSerialModalOpen, () => setIsSerialModalOpen(false)); // auto-injected
+  useMobileBackModal(isQuickAddModalOpen, handleCloseQuickAddModal);
+  useMobileBackModal(isMobileCustomerSearchOpen, () => setIsMobileCustomerSearchOpen(false)); // auto-injected
+  useMobileBackModal(isMobileProductSearchOpen, () => setIsMobileProductSearchOpen(false)); // auto-injected
+  useMobileBackModal(isMobileCheckoutOpen, () => setIsMobileCheckoutOpen(false)); // auto-injected
+  useMobileBackModal(showDraftPrompt, () => setShowDraftPrompt(false)); // auto-injected
+  useMobileBackModal(!!showSuccessModal, () => setShowSuccessModal(null));
+  useMobileBackModal(!!checkoutConfirmModal, () => setCheckoutConfirmModal(null));
 
   return (
     <div className="flex flex-col bg-slate-100 font-sans">

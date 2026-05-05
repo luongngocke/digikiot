@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import { ImageItem } from '../types';
 import { cn } from '../lib/utils';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 interface ImageLibraryModalProps {
   onClose: () => void;
@@ -12,6 +13,9 @@ interface ImageLibraryModalProps {
 
 export const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ onClose, onSelect }) => {
   const { images, uploadImage, deleteImage } = useAppContext();
+  
+  useMobileBackModal(true, onClose);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);

@@ -5,7 +5,7 @@ if (!window.__modalStack) {
   window.__modalStack = [];
 }
 
-let isProgrammaticBack = false;
+let programmaticBackCount = 0;
 
 declare global {
   interface Window {
@@ -16,8 +16,8 @@ declare global {
 // Global popstate handler (runs only once per navigation)
 if (!window.__popStateHandlerRegistered) {
   window.addEventListener('popstate', (e) => {
-    if (isProgrammaticBack) {
-      isProgrammaticBack = false;
+    if (programmaticBackCount > 0) {
+      programmaticBackCount--;
       return;
     }
     
@@ -57,8 +57,9 @@ export const useMobileBackModal = (isOpen: boolean, onClose: () => void) => {
       close: () => onCloseRef.current()
     });
     
-    // Push history state
-    window.history.pushState({ ...window.history.state, __modalId: modalId }, '');
+    // Push history state with a hash so mobile browsers definitely recognize it
+    const currentLoc = window.location.pathname + window.location.search;
+    window.history.pushState({ ...window.history.state, __modalId: modalId }, '', currentLoc + '#' + modalId);
 
     return () => {
       // Remove from stack if unmounted or closed via UI
@@ -67,11 +68,12 @@ export const useMobileBackModal = (isOpen: boolean, onClose: () => void) => {
         window.__modalStack.splice(index, 1);
         
         // If it was closed via UI (not via back button), we clean up history
-        if (window.history.state?.__modalId === modalId) {
-          isProgrammaticBack = true;
+        if (window.history.state?.__modalId === modalId || window.location.hash === '#' + modalId) {
+          programmaticBackCount++;
           window.history.back();
         }
       }
     };
   }, [isOpen]);
 };
+

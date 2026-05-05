@@ -4,10 +4,11 @@ import { useAppContext } from '../context/AppContext';
 import { Product, InvoiceItem, Customer, CashTransaction, ReturnSalesOrder, Invoice } from '../types';
 import { formatNumber, parseFormattedNumber } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export const CreateReturnSales: React.FC = () => {
-  const { products, customers, invoices, addReturnSalesOrder, updateProduct, addStockCard, addCashTransaction, returnSalesOrders } = useAppContext();
+  const { products, customers, invoices, addReturnSalesOrder, updateProduct, addStockCard, addCashTransaction, returnSalesOrders, wallets } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,6 +20,7 @@ export const CreateReturnSales: React.FC = () => {
   const [overallDiscount, setOverallDiscount] = useState(0);
   const [paidAmount, setPaidAmount] = useState<number>(0);
   const [note, setNote] = useState('');
+  const [walletId, setWalletId] = useState<string>('');
 
   // Handle pre-fill from location state
   useEffect(() => {
@@ -36,6 +38,8 @@ export const CreateReturnSales: React.FC = () => {
   }, [location.state, customers]);
   
   const [invoiceSuggestions, setInvoiceSuggestions] = useState<Invoice[]>([]);
+
+  useMobileBackModal(invoiceSuggestions.length > 0, () => setInvoiceSuggestions([]));
 
   const selectedItems = cart.filter(item => item.selected);
   const totalGoods = selectedItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -93,6 +97,7 @@ export const CreateReturnSales: React.FC = () => {
   const handleCreateReturn = async () => {
     if (selectedItems.length === 0) return alert('Vui lòng chọn ít nhất một sản phẩm để trả!');
     if (!selectedCustomer) return alert('Vui lòng chọn khách hàng!');
+    if (paidAmount > 0 && !walletId) return alert('Vui lòng chọn nguồn tiền chi trả!');
     
     const now = new Date();
     const returnId = returnCode === 'Mã phiếu tự động' ? generateId('THB', returnSalesOrders) : returnCode;
@@ -138,7 +143,8 @@ export const CreateReturnSales: React.FC = () => {
         category: 'OTHER',
         partner: selectedCustomer.name,
         note: `Trả tiền cho khách trả hàng ${returnId}`,
-        refId: returnId
+        refId: returnId,
+        walletId: walletId
       };
       addCashTransaction(newTransaction);
     }
@@ -322,6 +328,22 @@ export const CreateReturnSales: React.FC = () => {
                 className="w-32 text-right border border-slate-200 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold outline-none focus:border-blue-500 text-emerald-600" 
               />
             </div>
+            {paidAmount > 0 && (
+              <div className="flex justify-between items-center bg-emerald-50 p-2 rounded-lg border border-emerald-100 mt-2">
+                <span className="text-sm font-medium text-emerald-700">Ví chi trả</span>
+                <select
+                  value={walletId || ''}
+                  onChange={e => setWalletId(e.target.value)}
+                  className="w-32 text-right border border-emerald-200 rounded-lg bg-white px-2 py-1.5 text-xs font-semibold outline-none focus:border-emerald-500 text-emerald-700 appearance-none bg-no-repeat"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23047857' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.2rem center`, backgroundSize: `1.2em 1.2em`, paddingRight: `1.5rem` }}
+                >
+                  <option value="" disabled>Chọn ví</option>
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="pt-4">

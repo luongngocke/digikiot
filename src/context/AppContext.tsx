@@ -53,6 +53,7 @@ interface AppContextProps extends AppState {
   updateWallet: (id: string, updates: Partial<Wallet>) => void;
   deleteWallet: (id: string) => void;
   addWalletTransaction: (transaction: WalletTransaction) => void;
+  syncData: () => Promise<void>;
 }
 
 const defaultPrintSettings: PrintSettings = {
@@ -74,6 +75,8 @@ const initialState: AppState = {
   currentUser: null,
   users: [],
   products: [],
+  brands: [],
+  categories: [],
   customers: [],
   suppliers: [],
   invoices: [],
@@ -117,6 +120,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           returnSalesOrders: Array.isArray(parsed.returnSalesOrders) ? parsed.returnSalesOrders : [],
           invoices: Array.isArray(parsed.invoices) ? parsed.invoices : initialState.invoices,
           products: Array.isArray(parsed.products) ? parsed.products : initialState.products,
+          brands: Array.isArray(parsed.brands) ? parsed.brands : initialState.brands,
+          categories: Array.isArray(parsed.categories) ? parsed.categories : initialState.categories,
           customers: Array.isArray(parsed.customers) ? parsed.customers : initialState.customers,
           suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : initialState.suppliers,
           images: Array.isArray(parsed.images) ? parsed.images : [],
@@ -141,14 +146,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem('cuongtin_erp_state', JSON.stringify(state));
   }, [state]);
 
-  // Fetch data from Google Sheets on mount
-  useEffect(() => {
-    const loadDataFromAPI = async () => {
-      try {
-        setIsLoading(true);
-        // Fetch core data in parallel
-        const [
-          apiProducts, 
+  const syncData = async () => {
+    try {
+      setIsLoading(true);
+      // Fetch core data in parallel
+      const [
+        apiProducts, 
           apiCustomers, 
           apiSuppliers, 
           apiSerials, 
@@ -173,7 +176,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           apiWifiRecords,
           apiCameraAccounts,
           apiWallets,
-          apiWalletTransactions
+          apiWalletTransactions,
+          apiBrands,
+          apiCategories
         ] = await Promise.all([
           apiService.readSheet('Products'),
           apiService.readSheet('Customers'),
@@ -200,7 +205,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           apiService.readSheet('WifiRecords'),
           apiService.readSheet('CameraAccounts'),
           apiService.readSheet('Wallets'),
-          apiService.readSheet('WalletTransactions')
+          apiService.readSheet('WalletTransactions'),
+          apiService.readSheet('Brands'),
+          apiService.readSheet('Categories')
         ]);
 
         const mappedProducts = apiProducts.length > 0 ? apiProducts.map((p: any) => ({
@@ -215,7 +222,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           category: String(p.category || ''),
           unit: String(p.unit || ''),
           image: String(p.image || p.imageUrl || p.link_anh || p.AnhText || ''),
-          warrantyMonths: p.warrantyMonths || p.warranty || p.BaoHanh || p.warranty_months || p.wa ? Number(p.warrantyMonths || p.warranty || p.BaoHanh || p.warranty_months || p.wa) : undefined
+          warrantyMonths: p.warrantyMonths || p.warranty || p.BaoHanh || p.warranty_months || p.wa ? Number(p.warrantyMonths || p.warranty || p.BaoHanh || p.warranty_months || p.wa) : undefined,
+          expectedOutOfStock: String(p.expectedOutOfStock || ''),
+          lowStockThreshold: Number(p.lowStockThreshold) || 0,
+          status: (p.status === 'Ngừng kinh doanh' || p.status === 'DISCONTINUED') ? 'Ngừng kinh doanh' : 'Đang kinh doanh'
         })) : [];
 
         const extractItems = (record: any, details: any[], parentIdKeys: string[]) => {
@@ -335,10 +345,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setState(prev => ({
           ...prev,
           products: mappedProducts,
+          brands: apiBrands.length > 0 ? apiBrands.map((b: any) => ({
+            id: String(b.id || ''),
+            name: String(b.name || '')
+          })) : [],
+          categories: apiCategories.length > 0 ? apiCategories.map((c: any) => ({
+            id: String(c.id || ''),
+            name: String(c.name || '')
+          })) : [],
           customers: apiCustomers.length > 0 ? apiCustomers.map((c: any) => ({
             id: String(c.id || ''),
             name: String(c.name || ''),
             phone: String(c.phone || ''),
+            phone2: String(c.phone2 || ''),
             address: String(c.address || ''),
             location: String(c.location || ''),
             note: String(c.note || ''),
@@ -567,7 +586,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     };
 
-    loadDataFromAPI();
+  // Fetch data from Google Sheets on mount
+  useEffect(() => {
+    syncData();
   }, []);
 
   // Polling for new invoices to support notifications
@@ -649,7 +670,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       brand: product.brand || '',
       warranty: product.warrantyMonths || 0,
       expectedOutOfStock: product.expectedOutOfStock || '',
-      image: product.image || ''
+      image: product.image || '',
+      lowStockThreshold: product.lowStockThreshold || 0,
+      status: product.status || 'Đang kinh doanh'
     }).then(result => {
       if (!result.success) {
         console.error("[AppContext] Background save failed for product:", product.id);
@@ -703,6 +726,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.brand !== undefined) apiUpdates.brand = updates.brand;
     if (updates.warrantyMonths !== undefined) apiUpdates.warranty = updates.warrantyMonths;
     if (updates.expectedOutOfStock !== undefined) apiUpdates.expectedOutOfStock = updates.expectedOutOfStock;
+    if (updates.lowStockThreshold !== undefined) apiUpdates.lowStockThreshold = updates.lowStockThreshold;
+    if (updates.status !== undefined) apiUpdates.status = updates.status;
     if (updates.image !== undefined) apiUpdates.image = updates.image;
 
     apiService.updateRecord('Products', id, apiUpdates).then(result => {
@@ -783,6 +808,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       id: newCustomer.id,
       name: newCustomer.name,
       phone: newCustomer.phone?.startsWith('0') ? `'${newCustomer.phone}` : newCustomer.phone,
+      phone2: newCustomer.phone2?.startsWith('0') ? `'${newCustomer.phone2}` : newCustomer.phone2 || '',
       address: newCustomer.address || '',
       location: newCustomer.location || '',
       note: newCustomer.note || '',
@@ -799,9 +825,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       customers: (prev.customers || []).map(c => c.id === id ? { ...c, ...updates } : c)
     }));
     
-    const apiUpdates = { ...updates };
+    const apiUpdates: any = { ...updates };
     if (apiUpdates.phone?.startsWith('0')) {
       apiUpdates.phone = `'${apiUpdates.phone}`;
+    }
+    if (apiUpdates.phone2?.startsWith('0')) {
+      apiUpdates.phone2 = `'${apiUpdates.phone2}`;
     }
     await apiService.updateRecord('Customers', id, apiUpdates);
   };
@@ -2022,7 +2051,8 @@ ${updates.purchaseId ? `<b>Đơn hàng liên kết:</b> ${updates.purchaseId}\n`
       addWallet,
       updateWallet,
       deleteWallet,
-      addWalletTransaction
+      addWalletTransaction,
+      syncData
     }}>
       {children}
     </AppContext.Provider>

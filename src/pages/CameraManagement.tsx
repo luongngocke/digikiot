@@ -3,6 +3,7 @@ import { Search, Plus, Camera, User, Phone, MapPin, Calendar, Trash2, Edit3, Mor
 import { useAppContext } from '../context/AppContext';
 import { CameraAccountRecord } from '../types';
 import { generateId } from '../lib/idUtils';
+import { useMobileBackModal } from '../hooks/useMobileBackModal';
 
 export const CameraManagement: React.FC = () => {
   const { customers, cameraAccounts, addCameraAccount, updateCameraAccount, deleteCameraAccount, currentUser } = useAppContext();
@@ -113,7 +114,11 @@ export const CameraManagement: React.FC = () => {
     }
   };
 
-  return (
+
+  useMobileBackModal(showAddModal, () => setShowAddModal(false)); // auto-injected
+  useMobileBackModal(showSuggestions, () => setShowSuggestions(false)); // auto-injected
+  useMobileBackModal(!!editingRecord, () => setEditingRecord(null)); // auto-injected
+return (
     <div className="flex flex-col gap-6 p-4 md:p-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
