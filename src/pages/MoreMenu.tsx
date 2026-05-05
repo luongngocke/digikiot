@@ -146,7 +146,7 @@ export const MoreMenu: React.FC = () => {
         />
         <p className="text-xs text-slate-500">Phát triển bởi <strong className="text-slate-600">DigiKiot - Cuongtin.vn</strong></p>
         <p className="text-xs text-slate-500 mt-1">Số kỹ thuật: <strong className="text-slate-600">0931.113.048</strong></p>
-        <p className="text-[10px] text-slate-400 mt-2 font-mono bg-slate-200/50 px-2 py-0.5 rounded-full">Phiên bản V1.19426</p>
+        <p className="text-[10px] text-slate-400 mt-2 font-mono bg-slate-200/50 px-2 py-0.5 rounded-full">Phiên bản V1.{new Date().getDate()}{new Date().getMonth() + 1}{new Date().getFullYear().toString().slice(-2)}</p>
       </div>
     </div>
   );
