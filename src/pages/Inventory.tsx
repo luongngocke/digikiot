@@ -420,8 +420,6 @@ return (
           <table className="w-full border-collapse text-left">
             <thead className="sticky top-0 z-10 bg-white border-b border-slate-200">
               <tr className="text-slate-700 text-sm font-bold">
-                <th className="p-3 w-10"><input type="checkbox" className="rounded border-slate-300" /></th>
-                <th className="p-3 w-10"></th>
                 <th className="p-3 w-12"></th>
                 <th className="p-3">Mã hàng</th>
                 <th className="p-3">Tên hàng</th>
@@ -435,7 +433,7 @@ return (
               </tr>
               {/* Summary Row */}
               <tr className="bg-slate-50/50 text-slate-800 text-[13px] font-bold border-b border-slate-100">
-                <td colSpan={11}></td>
+                <td colSpan={9}></td>
                 <td className="p-3 text-right">{formatNumber(totalStock)}</td>
               </tr>
             </thead>
@@ -446,8 +444,6 @@ return (
                   onClick={() => { setSelectedProduct(p); setSerialStatusTab('IN_STOCK'); }}
                   className="hover:bg-blue-50/30 transition-colors cursor-pointer text-[13px] text-slate-600 group"
                 >
-                  <td className="p-3"><input type="checkbox" className="rounded border-slate-300" onClick={(e) => e.stopPropagation()} /></td>
-                  <td className="p-3"><Star size={16} className="text-slate-300 group-hover:text-amber-400 transition-colors" /></td>
                   <td className="p-3">
                     <div className={`w-8 h-8 ${p.color} rounded flex items-center justify-center text-white shadow-sm overflow-hidden`}>
                       {p.image ? (

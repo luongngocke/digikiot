@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Truck, CheckCircle, X, Trash2, Barcode, Printer, ArrowLeft, LayoutGrid, Eye, Info, ChevronDown, Edit2, ArrowRight, UserCircle, RotateCcw } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Product, ImportItem, Supplier, CashTransaction, ReturnImportOrder, ImportOrder } from '../types';
-import { formatNumber, parseFormattedNumber } from '../lib/utils';
+import { formatNumber, parseFormattedNumber, formatDateTime } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
 import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -176,7 +176,7 @@ return () => clearTimeout(handler);
   const executeReturn = async () => {
     const now = new Date();
     const returnId = returnCode === 'Mã phiếu tự động' ? generateId('THN', returnImportOrders) : returnCode;
-    const dateStr = now.toLocaleString('vi-VN');
+    const dateStr = formatDateTime(now);
 
     const order: ReturnImportOrder = {
       id: returnId,

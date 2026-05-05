@@ -340,9 +340,9 @@ return (externalSerials || []).filter(s =>
                 </div>
                 {showCustomerDropdown && (
                   <div className="absolute top-full left-0 right-0 z-50 bg-white border border-slate-200 rounded-lg shadow-xl mt-1 max-h-48 overflow-y-auto">
-                    {customerSuggestions.map(c => (
+                    {customerSuggestions.map((c, idx) => (
                       <div 
-                        key={c.id || c.phone} 
+                        key={`${c.id || c.phone}-${idx}`} 
                         className="px-4 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-50"
                         onClick={() => {
                           setCustomer(c.name);

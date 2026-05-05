@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Plus, Truck, CheckCircle, X, Trash2, Barcode, Printer, ArrowLeft, LayoutGrid, Eye, Info, ChevronDown, Edit2, ArrowRight, UserCircle, PieChart, FileText, Package, Image as ImageIcon } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Product, ImportItem, Supplier, CashTransaction, ImportOrder } from '../types';
@@ -56,8 +56,10 @@ export const Import: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState<{id: string, total: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const location = useLocation();
   const [showDraftPrompt, setShowDraftPrompt] = useState(() => {
-    if (importDraft?.cart && importDraft.cart.length > 0 && !importDraft.isExplicitIntent) {
+    const isExplicitIntent = location.state?.isExplicitIntent || importDraft?.isExplicitIntent;
+    if (importDraft?.cart && importDraft.cart.length > 0 && !isExplicitIntent) {
       return true;
     }
     return false;
@@ -120,14 +122,22 @@ export const Import: React.FC = () => {
   useEffect(() => {
     if (showDraftPrompt) return; // Don't sync draft while prompt is open
 
-    // Only update draft if values actually changed to avoid unnecessary re-renders
+    // Only update draft if values actually changed or if we need to clear isExplicitIntent
     if (
       importDraft?.cart !== cart || 
       importDraft?.selectedSupplier !== selectedSupplier || 
       importDraft?.paid !== paidAmount ||
-      importDraft?.walletId !== walletId
+      importDraft?.walletId !== walletId ||
+      importDraft?.isExplicitIntent !== undefined
     ) {
-      setImportDraft({ ...importDraft, cart, selectedSupplier, paid: paidAmount, walletId });
+      setImportDraft({ 
+        ...importDraft, 
+        cart, 
+        selectedSupplier, 
+        paid: paidAmount, 
+        walletId,
+        isExplicitIntent: undefined // Always clear it so prompt shows next time
+      });
     }
   }, [cart, selectedSupplier, paidAmount, walletId, setImportDraft, importDraft, showDraftPrompt]);
 
@@ -285,7 +295,7 @@ export const Import: React.FC = () => {
 
     try {
       const [y, m, d, hh, min] = transactionDate.split(/[-T:]/);
-      const dateStr = `${hh}:${min}:00 ${d}/${m}/${y}`;
+      const dateStr = `${d}/${m}/${y} ${hh}:${min}:00`;
       const now = new Date(`${y}-${m}-${d}T${hh}:${min}:00`);
 
       const isEdit = !!importDraft?.editingId;
@@ -541,9 +551,9 @@ export const Import: React.FC = () => {
             </div>
             {(productSuggestions.length > 0 || (searchTerm.trim() !== '' && productSuggestions.length === 0)) && (
               <div className="absolute top-full left-0 right-0 z-[60] bg-white border border-slate-200 rounded-lg shadow-2xl mt-1 max-h-[400px] overflow-y-auto">
-                {productSuggestions.map(p => (
+                {productSuggestions.map((p, idx) => (
                   <div 
-                    key={p.id} 
+                    key={`${p.id}-${idx}`} 
                     onClick={() => addToCart(p)}
                     className="p-3 border-b border-slate-50 hover:bg-blue-50 flex gap-3 items-center cursor-pointer transition-colors"
                   >
@@ -639,7 +649,7 @@ export const Import: React.FC = () => {
                 </tr>
               ) : (
                 cart.map((item, index) => (
-                  <React.Fragment key={item.id}>
+                  <React.Fragment key={`${item.id}-${index}`}>
                     <tr className="border-b border-slate-100 hover:bg-slate-50/50 group">
                       <td className="p-3 text-center">
                         <button onClick={() => removeFromCart(item.id)} className="text-slate-300 hover:text-red-500 transition-colors">
@@ -743,61 +753,61 @@ export const Import: React.FC = () => {
           </table>
 
           {/* Mobile Card View */}
-          <div className="md:hidden divide-y divide-slate-100 pb-40">
+          <div className="md:hidden bg-slate-50 p-3 space-y-3 pb-40">
             {cart.length === 0 ? (
               <div className="p-20 flex flex-col items-center justify-center text-center">
-                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4 relative">
+                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4 relative shadow-inner">
                   <FileText size={40} className="text-blue-400" />
                   <div className="absolute top-4 right-4 w-2 h-2 bg-blue-300 rounded-full"></div>
                   <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-blue-300 rounded-full"></div>
                   <div className="absolute top-1/2 -left-2 w-1 h-1 bg-blue-300 rounded-full"></div>
                   <div className="absolute top-1/2 -right-2 w-1 h-1 bg-blue-300 rounded-full"></div>
                 </div>
-                <p className="text-slate-800 font-medium text-base">Chưa có hàng trong phiếu</p>
+                <p className="text-slate-500 font-medium text-sm">Chưa có hàng trong phiếu</p>
               </div>
             ) : (
               cart.map((item, index) => {
                 const product = (products || []).find(p => p.id === item.id);
                 return (
-                  <div key={item.id} className="p-4 flex gap-3">
-                    <div className="w-16 h-16 bg-slate-100 rounded-lg shrink-0 flex items-center justify-center overflow-hidden">
+                  <div key={`${item.id}-${index}`} className="bg-white rounded-xl shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] border border-slate-200 p-3 flex gap-3 relative">
+                    <button 
+                      onClick={() => removeFromCart(item.id)} 
+                      className="absolute top-2.5 right-2 text-slate-400 hover:text-red-500 bg-white rounded-full p-1 active:bg-slate-100 transition-colors z-10"
+                    >
+                      <X size={16} />
+                    </button>
+                    
+                    <div className="w-16 h-16 bg-slate-100 rounded-lg shrink-0 flex items-center justify-center overflow-hidden border border-slate-200/60 mt-0.5">
                       {product?.image ? (
                         <img src={product.image} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
-                        <Package size={24} className="text-slate-400" />
+                        <Package size={20} className="text-slate-300" />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-sm font-bold text-slate-800 leading-snug">{item.name}</h3>
-                        <button onClick={() => removeFromCart(item.id)} className="text-slate-300 hover:text-red-500 p-1 -mt-1 -mr-1">
-                          <X size={18} />
-                        </button>
-                      </div>
-                      <p className="text-sm text-slate-600 mt-1">{item.id}</p>
-                      <div className="mt-1">
-                        <span className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded">{item.unit || 'Cái'}</span>
+                    
+                    <div className="flex-1 pr-7">
+                      <h3 className="text-[13px] font-bold text-slate-800 leading-tight mb-1">{item.name}</h3>
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+                        <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">{item.id}</span>
+                        <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded">{item.unit || 'Cái'}</span>
+                        <span className="text-[11px] text-slate-500">Tồn: {product?.stock || 0}</span>
                       </div>
                       
                       {item.hasSerial && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="border border-slate-300 text-slate-500 text-[10px] px-1 rounded">IMEI</span>
+                        <div className="flex items-center gap-1.5 mb-2.5">
+                          <span className="bg-blue-50 border border-blue-200 text-blue-600 text-[9px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">IMEI</span>
                           {item.serials && item.serials.length > 0 ? (
-                            <span className="text-sm text-blue-600 font-medium">{item.serials.length} IMEI đã thêm</span>
+                            <span className="text-[11px] text-blue-600 font-bold">{item.serials.length} IMEI</span>
                           ) : (
-                            <span className="text-sm text-yellow-600 font-medium">Chưa thêm IMEI</span>
+                            <span className="text-[11px] text-yellow-600 font-bold">Chưa quét</span>
                           )}
                         </div>
                       )}
                       
-                      <p className="text-sm text-slate-500 mt-1">
-                        Tồn kho: {product?.stock || 0} • Giá: {formatNumber(item.price)}
-                      </p>
-                      
-                      <div className="flex justify-between items-center mt-3">
-                        <div className="flex items-center border border-slate-200 rounded-lg">
+                      <div className="flex justify-between items-center bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                        <div className="flex items-center border border-slate-200 bg-white rounded flex-shrink-0">
                           <button 
-                            className="w-10 h-8 flex items-center justify-center text-slate-600" 
+                            className="w-7 h-7 flex items-center justify-center text-slate-600 active:bg-slate-100 disabled:opacity-50" 
                             onClick={() => updateQty(item.id, item.qty - 1)}
                             disabled={item.hasSerial}
                           >
@@ -808,28 +818,31 @@ export const Import: React.FC = () => {
                             value={item.qty}
                             disabled={item.hasSerial}
                             onChange={(e) => updateQty(item.id, Number(e.target.value) || 0)}
-                            className="w-10 text-center text-sm font-bold outline-none bg-transparent"
+                            className="w-8 text-center text-xs font-bold outline-none bg-white disabled:bg-slate-50"
                           />
                           <button 
-                            className="w-10 h-8 flex items-center justify-center text-slate-600" 
+                            className="w-7 h-7 flex items-center justify-center text-slate-600 active:bg-slate-100 disabled:opacity-50" 
                             onClick={() => updateQty(item.id, item.qty + 1)}
                             disabled={item.hasSerial}
                           >
                             +
                           </button>
                         </div>
-                        <span className="text-base font-bold text-slate-800">{formatNumber(item.price * item.qty)}</span>
+                        <div className="text-right min-w-[70px]">
+                          <div className="text-[10px] text-slate-500 mb-0.5">{formatNumber(item.price)}/sp</div>
+                          <div className="text-sm font-black text-rose-600">{formatNumber((item.price * item.qty) - (item.discount || 0))}</div>
+                        </div>
                       </div>
 
                       {/* Serial input for mobile */}
                       {item.hasSerial && (
-                        <div className="mt-3 space-y-2 pt-3 border-t border-slate-50">
+                        <div className="mt-2.5 space-y-2 pt-2 border-t border-slate-100">
                           <div className="relative">
                             <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                             <input 
                               type="text" 
-                              placeholder="Quét Serial/Imei" 
-                              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-blue-400 font-medium"
+                              placeholder="Quét IMEI / Serial" 
+                              className="w-full bg-slate-50 border border-slate-200 rounded-md pl-9 pr-3 py-1.5 text-xs outline-none focus:border-blue-400 font-medium"
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
                                   addSerialToItem(item.id, (e.target as HTMLInputElement).value);
@@ -839,10 +852,10 @@ export const Import: React.FC = () => {
                             />
                           </div>
                           {item.serials && item.serials.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="flex flex-wrap gap-1">
                               {(item.serials || []).map((sn, sIdx) => (
-                                <span key={`${sn}-${sIdx}`} className="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 border border-blue-100">
-                                  {sn} <X size={12} onClick={() => removeSerialFromItem(item.id, sn)} />
+                                <span key={`${sn}-${sIdx}`} className="bg-blue-50 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border border-blue-100">
+                                  {sn} <X size={10} className="cursor-pointer active:scale-90" onClick={() => removeSerialFromItem(item.id, sn)} />
                                 </span>
                               ))}
                             </div>
@@ -912,9 +925,9 @@ export const Import: React.FC = () => {
               </div>
               {supplierSuggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 z-[60] bg-white border border-slate-200 rounded-lg shadow-2xl mt-1 max-h-[200px] overflow-y-auto">
-                  {supplierSuggestions.map(s => (
+                  {supplierSuggestions.map((s, idx) => (
                     <div 
-                      key={s.phone} 
+                      key={`${s.phone}-${s.id || idx}`} 
                       onClick={() => {
                         setSelectedSupplier(s);
                         setSupplierSuggestions([]);
@@ -1152,9 +1165,9 @@ export const Import: React.FC = () => {
                 </button>
               </div>
             )}
-            {(searchTerm.trim() ? productSuggestions : (products || []).filter(p => !p.isService)).map(p => (
+            {(searchTerm.trim() ? productSuggestions : (products || []).filter(p => !p.isService)).map((p, idx) => (
               <div 
-                key={p.id} 
+                key={`${p.id}-${idx}`} 
                 onClick={() => {
                   addToCart(p);
                   setIsMobileProductSearchOpen(false);
@@ -1202,9 +1215,9 @@ export const Import: React.FC = () => {
             {(mobileSupplierSearchTerm.trim() 
               ? (suppliers || []).filter(s => (s.name || '').toLowerCase().includes(mobileSupplierSearchTerm.toLowerCase()) || (s.phone || '').includes(mobileSupplierSearchTerm))
               : (suppliers || [])
-            ).map(s => (
+            ).map((s, idx) => (
               <div 
-                key={s.phone} 
+                key={`${s.phone}-${s.id || idx}`} 
                 onClick={() => {
                   setSelectedSupplier(s);
                   setIsMobileSupplierSearchOpen(false);
@@ -1515,9 +1528,10 @@ export const Import: React.FC = () => {
                 <button 
                   onClick={() => {
                     const name = (document.getElementById('new-sup-name') as HTMLInputElement).value;
-                    const phone = (document.getElementById('new-sup-phone') as HTMLInputElement).value;
+                    let phone = (document.getElementById('new-sup-phone') as HTMLInputElement).value;
                     const address = (document.getElementById('new-sup-address') as HTMLInputElement)?.value || '';
                     if (name && phone) {
+                      phone = phone.startsWith('0') ? phone : '0' + phone;
                       addSupplier({ name, phone, address });
                       setSelectedSupplier({ name, phone, address, id: 'temp', totalBuy: 0, totalDebt: 0 });
                       setIsSupplierModalOpen(false);
@@ -1593,9 +1607,6 @@ export const Import: React.FC = () => {
                 </button>
                 <button 
                   onClick={() => {
-                    if (importDraft) {
-                      setImportDraft({ ...importDraft, isExplicitIntent: true });
-                    }
                     setShowDraftPrompt(false);
                   }}
                   className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200"

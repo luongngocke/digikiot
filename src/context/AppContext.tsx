@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { AppState, Product, Customer, Supplier, Invoice, ImportOrder, CashTransaction, POSDraft, ImportDraft, MaintenanceRecord, MaintenanceTransfer, ReturnImportOrder, ReturnSalesOrder, User, Serial, StockCard, PrintSettings, ExternalSerial, ImageItem, Task, TelegramSettings, WifiRecord, CameraAccountRecord, Wallet, WalletTransaction } from '../types';
+import { AppState, Product, Customer, Supplier, Invoice, ImportOrder, CashTransaction, POSDraft, ImportDraft, MaintenanceRecord, MaintenanceTransfer, ReturnImportOrder, ReturnSalesOrder, User, Serial, StockCard, PrintSettings, ExternalSerial, ImageItem, Task, TelegramSettings, WifiRecord, CameraAccountRecord, Wallet } from '../types';
 import { apiService } from '../services/api';
 import { generateId } from '../lib/idUtils';
+import { formatDateTime, padPhone } from '../lib/utils';
 import { sendNotification, sendTelegramMessage } from '../lib/notification';
 
 interface AppContextProps extends AppState {
@@ -24,7 +25,7 @@ interface AppContextProps extends AppState {
   removeSerial: (sn: string) => void;
   addCashTransaction: (transaction: CashTransaction) => void;
   setPOSDraft: (draft: POSDraft) => void;
-  setImportDraft: (draft: ImportDraft) => void;
+  setImportDraft: (draft: ImportDraft | undefined | null) => void;
   addMaintenanceRecord: (record: MaintenanceRecord) => void;
   updateMaintenanceRecord: (id: string, updates: Partial<MaintenanceRecord>) => void;
   addMaintenanceTransfer: (transfer: MaintenanceTransfer) => void;
@@ -52,7 +53,6 @@ interface AppContextProps extends AppState {
   addWallet: (wallet: Wallet) => void;
   updateWallet: (id: string, updates: Partial<Wallet>) => void;
   deleteWallet: (id: string) => void;
-  addWalletTransaction: (transaction: WalletTransaction) => void;
   syncData: () => Promise<void>;
 }
 
@@ -95,8 +95,7 @@ const initialState: AppState = {
   tasks: [],
   telegramSettings: defaultTelegramSettings,
   printSettings: defaultPrintSettings,
-  wallets: [],
-  walletTransactions: []
+  wallets: []
 };
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -130,7 +129,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           cameraAccounts: Array.isArray(parsed.cameraAccounts) ? parsed.cameraAccounts : [],
           tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
           wallets: Array.isArray(parsed.wallets) ? parsed.wallets : [],
-          walletTransactions: Array.isArray(parsed.walletTransactions) ? parsed.walletTransactions : [],
           telegramSettings: parsed.telegramSettings || initialState.telegramSettings,
         };
       }
@@ -176,7 +174,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           apiWifiRecords,
           apiCameraAccounts,
           apiWallets,
-          apiWalletTransactions,
           apiBrands,
           apiCategories
         ] = await Promise.all([
@@ -205,7 +202,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           apiService.readSheet('WifiRecords'),
           apiService.readSheet('CameraAccounts'),
           apiService.readSheet('Wallets'),
-          apiService.readSheet('WalletTransactions'),
           apiService.readSheet('Brands'),
           apiService.readSheet('Categories')
         ]);
@@ -271,9 +267,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const debt = inv.debt !== undefined ? Number(inv.debt) : (total - paid);
             return {
               id: String(inv.id || ''),
-              date: String(inv.createdAt || inv.date || ''),
+              date: formatDateTime(inv.createdAt || inv.date),
               customer: String(inv.customerID || inv.customer || ''),
-              phone: String(inv.phone || ''),
+              phone: padPhone(inv.phone),
               address: String(inv.address || ''),
               total,
               paid,
@@ -283,6 +279,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               discount: Number(inv.discount || 0),
               note: String(inv.note || ''),
               taskId: String(inv.taskId || inv.taskID || inv.TaskID || ''),
+              paymentMethod: (inv.paymentMethod as any) || 'CASH',
+              walletId: String(inv.walletId || ''),
               items: extractItems(inv, apiInvoiceDetails, ['invoiceID', 'invoiceId', 'InvoiceID', 'invoiceid'])
             };
           }) : [];
@@ -290,7 +288,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const mappedReturnSales = apiReturnSales.length > 0 ? apiReturnSales.map((ret: any) => {
             return {
               id: String(ret.id || ''),
-              date: String(ret.createdAt || ret.date || ''),
+              date: formatDateTime(ret.createdAt || ret.date),
               customer: String(ret.customerID || ret.customer || ''),
               totalGoods: Number(ret.totalGoods || 0),
               discount: Number(ret.discount || 0),
@@ -305,7 +303,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const mappedReturnImports = apiReturnImports.length > 0 ? apiReturnImports.map((ret: any) => {
             return {
               id: String(ret.id || ''),
-              date: String(ret.createdAt || ret.date || ''),
+              date: formatDateTime(ret.createdAt || ret.date),
               supplier: String(ret.supplierId || ret.supplier || ''),
               totalGoods: Number(ret.totalGoods || 0),
               discount: Number(ret.discount || 0),
@@ -356,8 +354,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           customers: apiCustomers.length > 0 ? apiCustomers.map((c: any) => ({
             id: String(c.id || ''),
             name: String(c.name || ''),
-            phone: String(c.phone || ''),
-            phone2: String(c.phone2 || ''),
+            phone: padPhone(c.phone),
+            phone2: padPhone(c.phone2),
             address: String(c.address || ''),
             location: String(c.location || ''),
             note: String(c.note || ''),
@@ -369,7 +367,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           suppliers: apiSuppliers.length > 0 ? apiSuppliers.map((s: any) => ({
             id: String(s.id || ''),
             name: String(s.name || ''),
-            phone: String(s.phone || ''),
+            phone: padPhone(s.phone),
             address: String(s.address || ''),
             totalDebt: Number(s.debt) || 0
           })) : [],
@@ -380,7 +378,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               sn,
               supplier: String(s.supplier || ''),
               importPrice: Number(s.importPrice) || 0,
-              date: String(s.date || ''),
+              date: formatDateTime(s.createdAt || s.date),
               refId: String(s.refId || ''),
               status: soldSerials.has(sn) ? 'SOLD' : 'AVAILABLE'
             };
@@ -405,7 +403,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             
             return {
               id: String(imp.id || ''),
-              date: String(imp.createdAt || imp.date || ''),
+              date: formatDateTime(imp.createdAt || imp.date),
               supplier: String(imp.supplierId || imp.supplier || ''),
               status: imp.status || 'DONE',
               total,
@@ -433,7 +431,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           returnSalesOrders: mappedReturnSales,
           cashTransactions: apiCash.length > 0 ? apiCash.map((c: any) => ({
             id: String(c.id || ''),
-            date: String(c.createdAt || c.date || ''),
+            date: formatDateTime(c.createdAt || c.date),
             type: c.type as 'RECEIPT' | 'PAYMENT',
             amount: Number(c.amount || 0),
             category: c.category as any,
@@ -444,9 +442,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           })) : [],
           maintenanceRecords: apiMaintenance.length > 0 ? apiMaintenance.map((m: any) => ({
             id: String(m.id || ''),
-            date: String(m.createdAt || m.date || ''),
+            date: formatDateTime(m.createdAt || m.date),
             customerName: String(m.customerName || ''),
-            customerPhone: String(m.customerPhone || ''),
+            customerPhone: padPhone(m.customerPhone),
             productName: String(m.productName || ''),
             serialNumber: String(m.serialNumber || ''),
             issue: String(m.issue || ''),
@@ -567,17 +565,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               }
             });
             return Array.from(uniqueMap.values());
-          })(),
-          walletTransactions: apiWalletTransactions && apiWalletTransactions.length > 0 ? apiWalletTransactions.map((t: any) => ({
-            id: String(t.id || ''),
-            walletId: String(t.walletId || ''),
-            type: t.type === 'IN' || t.type === 'OUT' ? t.type : 'OUT',
-            amount: Number(t.amount || 0),
-            description: String(t.description || ''),
-            date: String(t.date || ''),
-            relatedType: t.relatedType || undefined,
-            relatedId: t.relatedId ? String(t.relatedId) : undefined
-          })) : []
+          })()
         }));
       } catch (error) {
         console.error("Failed to load data from Google Sheets:", error);
@@ -614,9 +602,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               // Map new invoices and add to state
               const mappedNew = newInvoicesFromApi.map((inv: any) => ({
                 id: String(inv.id || ''),
-                date: String(inv.createdAt || inv.date || ''),
+                date: formatDateTime(inv.createdAt || inv.date),
                 customer: String(inv.customerID || inv.customer || ''),
-                phone: String(inv.phone || ''),
+                phone: padPhone(inv.phone),
                 address: String(inv.address || ''),
                 total: Number(inv.finalAmount || inv.total || 0),
                 paid: Number(inv.paidAmount || inv.paid || 0),
@@ -624,6 +612,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 discount: Number(inv.discount || 0),
                 note: String(inv.note || ''),
                 taskId: String(inv.taskId || ''),
+                paymentMethod: (inv.paymentMethod as any) || 'CASH',
+                walletId: String(inv.walletId || ''),
                 items: [] // Polling only fetches header, details would need another call
               }));
 
@@ -698,7 +688,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         type: diff > 0 ? 'NHAP' : 'XUAT',
         qty: Math.abs(diff),
         partner: 'Điều chỉnh kho',
-        date: new Date().toLocaleString('vi-VN'),
+        date: formatDateTime(new Date()),
         price: product.importPrice || 0,
         refId: 'ADJ' + Date.now().toString().slice(-6),
         sn: []
@@ -797,18 +787,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addCustomer = async (customer: Customer) => {
+    const paddedPhone = padPhone(customer.phone);
+    const paddedPhone2 = padPhone(customer.phone2);
     const newCustomer = { 
       ...customer, 
+      phone: paddedPhone,
+      phone2: paddedPhone2,
       id: customer.id || generateId('KH', state.customers || []),
-      createdAt: customer.createdAt || new Date().toLocaleString('vi-VN'),
+      createdAt: customer.createdAt || formatDateTime(new Date()),
       createdBy: customer.createdBy || state.currentUser?.name || 'Admin'
     };
     setState(prev => ({ ...prev, customers: [...(prev.customers || []), newCustomer] }));
     await apiService.createRecord('Customers', {
       id: newCustomer.id,
       name: newCustomer.name,
-      phone: newCustomer.phone?.startsWith('0') ? `'${newCustomer.phone}` : newCustomer.phone,
-      phone2: newCustomer.phone2?.startsWith('0') ? `'${newCustomer.phone2}` : newCustomer.phone2 || '',
+      phone: paddedPhone ? `'${paddedPhone}` : '',
+      phone2: paddedPhone2 ? `'${paddedPhone2}` : '',
       address: newCustomer.address || '',
       location: newCustomer.location || '',
       note: newCustomer.note || '',
@@ -820,28 +814,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateCustomer = async (id: string, updates: Partial<Customer>) => {
+    const apiUpdates: any = { ...updates };
+    if (updates.phone !== undefined) {
+      const paddedPhone = padPhone(updates.phone);
+      apiUpdates.phone = paddedPhone ? `'${paddedPhone}` : '';
+      updates.phone = paddedPhone;
+    }
+    if (updates.phone2 !== undefined) {
+      const paddedPhone2 = padPhone(updates.phone2);
+      apiUpdates.phone2 = paddedPhone2 ? `'${paddedPhone2}` : '';
+      updates.phone2 = paddedPhone2;
+    }
+    
     setState(prev => ({
       ...prev,
       customers: (prev.customers || []).map(c => c.id === id ? { ...c, ...updates } : c)
     }));
-    
-    const apiUpdates: any = { ...updates };
-    if (apiUpdates.phone?.startsWith('0')) {
-      apiUpdates.phone = `'${apiUpdates.phone}`;
-    }
-    if (apiUpdates.phone2?.startsWith('0')) {
-      apiUpdates.phone2 = `'${apiUpdates.phone2}`;
-    }
     await apiService.updateRecord('Customers', id, apiUpdates);
   };
 
   const addSupplier = async (supplier: Supplier) => {
-    const newSupplier = { ...supplier, id: supplier.id || generateId('NCC', state.suppliers || []) };
+    const paddedPhone = padPhone(supplier.phone);
+    const newSupplier = { ...supplier, phone: paddedPhone, id: supplier.id || generateId('NCC', state.suppliers || []) };
     setState(prev => ({ ...prev, suppliers: [...(prev.suppliers || []), newSupplier] }));
     await apiService.createRecord('Suppliers', {
       id: newSupplier.id,
       name: newSupplier.name,
-      phone: newSupplier.phone?.startsWith('0') ? `'${newSupplier.phone}` : newSupplier.phone,
+      phone: paddedPhone ? `'${paddedPhone}` : paddedPhone,
       address: newSupplier.address || '',
       totalBuy: 0,
       debt: 0,
@@ -905,14 +904,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         );
       }
 
-      let updatedWalletTransactions = prev.walletTransactions || [];
-      const wtxToUpdate = isUpdate ? updatedWalletTransactions.find(t => t.relatedId === newInvoice.id && t.relatedType === 'INVOICE') : null;
-      if (wtxToUpdate) {
-        updatedWalletTransactions = updatedWalletTransactions.map(t => 
-          t.id === wtxToUpdate.id ? { ...t, amount: newInvoice.paid } : t
-        );
-      }
-
       // Update products stock in state
       const updatedProducts = (prev.products || []).map(p => {
         let newStock = p.stock || 0;
@@ -947,8 +938,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }),
         stockCards: [...prev.stockCards.filter(sc => sc.refId !== newInvoice.id), ...newStockCards],
         products: updatedProducts,
-        cashTransactions: updatedCashTransactions,
-        walletTransactions: updatedWalletTransactions
+        cashTransactions: updatedCashTransactions
       };
     });
     
@@ -971,7 +961,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           oldDebt: newInvoice.oldDebt,
           totalDebt: newInvoice.totalDebt,
           taskId: newInvoice.taskId || '',
-          paymentMethod: 'CASH',
+          paymentMethod: newInvoice.paymentMethod || 'CASH',
+          walletId: newInvoice.walletId || '',
+          walletName: newInvoice.walletId ? state.wallets.find(w => w.id === newInvoice.walletId)?.name || '' : '',
           status: newInvoice.debt > 0 ? 'Còn nợ' : 'Hoàn tất',
           note: newInvoice.note || '',
           items: JSON.stringify(newInvoice.items)
@@ -984,10 +976,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const cashTx = state.cashTransactions.find(t => t.refId === newInvoice.id && t.category === 'SALES_REVENUE');
           if (cashTx) {
             await apiService.updateRecord('CashLedger', cashTx.id, { amount: newInvoice.paid });
-          }
-          const wtx = state.walletTransactions.find(t => t.relatedId === newInvoice.id && t.relatedType === 'INVOICE');
-          if (wtx) {
-            await apiService.updateRecord('WalletTransactions', wtx.id, { amount: newInvoice.paid });
           }
         } else {
           await apiService.createRecord('Invoices', syncData);
@@ -1106,6 +1094,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (updates.discount !== undefined) apiUpdates.discount = updates.discount;
     if (updates.note !== undefined) apiUpdates.note = updates.note;
     if (updates.taskId !== undefined) apiUpdates.taskId = updates.taskId;
+    if (updates.paymentMethod !== undefined) apiUpdates.paymentMethod = updates.paymentMethod;
+    if (updates.walletId !== undefined) {
+      apiUpdates.walletId = updates.walletId;
+      const walletObj = state.wallets.find(w => w.id === updates.walletId);
+      apiUpdates.walletName = walletObj ? walletObj.name : '';
+    }
 
     if (calculatedDebt !== undefined) {
       apiUpdates.debt = calculatedDebt;
@@ -1203,14 +1197,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           t.id === txToUpdate.id ? { ...t, amount: newOrder.paid, walletId: newOrder.walletId } : t
         );
       }
-
-      let updatedWalletTransactions = prev.walletTransactions || [];
-      const wtxToUpdate = isUpdate ? updatedWalletTransactions.find(t => t.relatedId === newOrder.id && t.relatedType === 'PURCHASE') : null;
-      if (wtxToUpdate) {
-        updatedWalletTransactions = updatedWalletTransactions.map(t => 
-          t.id === wtxToUpdate.id ? { ...t, amount: newOrder.paid, walletId: newOrder.walletId } : t
-        );
-      }
         
       const updatedProducts = (prev.products || []).map(p => {
         let newStock = p.stock || 0;
@@ -1235,8 +1221,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         importOrders: [...otherOrders, newOrder],
         stockCards: [...(prev.stockCards || []).filter(sc => sc.refId !== newOrder.id), ...newStockCards],
         products: updatedProducts,
-        cashTransactions: updatedCashTransactions,
-        walletTransactions: updatedWalletTransactions
+        cashTransactions: updatedCashTransactions
       };
     });
     
@@ -1270,10 +1255,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const cashTx = state.cashTransactions.find(t => t.refId === newOrder.id && t.category === 'IMPORT_PAYMENT');
           if (cashTx) {
             await apiService.updateRecord('CashLedger', cashTx.id, { amount: newOrder.paid, walletId: newOrder.walletId || '' });
-          }
-          const wtx = state.walletTransactions.find(t => t.relatedId === newOrder.id && t.relatedType === 'PURCHASE');
-          if (wtx) {
-            await apiService.updateRecord('WalletTransactions', wtx.id, { amount: newOrder.paid, walletId: newOrder.walletId || '' });
           }
         } else {
           await apiService.createRecord('Imports', syncData);
@@ -1596,27 +1577,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     if (transaction.walletId) {
-      const wTxId = `WTX${Date.now()}${Math.floor(Math.random() * 100)}`;
-      
-      const relatedTypeMap: Record<string, 'INVOICE' | 'PURCHASE' | 'MAINTENANCE' | 'OTHER'> = {
-        'SALE': 'INVOICE',
-        'SALES_REVENUE': 'INVOICE',
-        'IMPORT': 'PURCHASE',
-        'IMPORT_PAYMENT': 'PURCHASE',
-        'DEBT_COLLECTION': 'OTHER',
-        'DEBT_PAYMENT': 'OTHER'
-      };
-
-      addWalletTransaction({
-          id: wTxId,
-          walletId: transaction.walletId,
-          type: transaction.type === 'RECEIPT' ? 'IN' : 'OUT',
-          amount: transaction.amount,
-          date: transaction.date,
-          description: transaction.note,
-          relatedId: transaction.refId,
-          relatedType: relatedTypeMap[transaction.category] || 'OTHER'
+      setState(prev => {
+        const updatedWallets = (prev.wallets || []).map(w => {
+          if (w.id === transaction.walletId) {
+            const newBalance = transaction.type === 'RECEIPT' ? w.balance + transaction.amount : w.balance - transaction.amount;
+            return { ...w, balance: newBalance };
+          }
+          return w;
+        });
+        return { ...prev, wallets: updatedWallets };
       });
+
+      const wallet = state.wallets.find(w => w.id === transaction.walletId);
+      if (wallet) {
+        const newBalance = transaction.type === 'RECEIPT' ? wallet.balance + transaction.amount : wallet.balance - transaction.amount;
+        await apiService.updateRecord('Wallets', wallet.id, { balance: newBalance });
+      }
     }
 
     if (transaction.category === 'DEBT_COLLECTION' && transaction.partner) {
@@ -1628,8 +1604,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState(prev => ({ ...prev, posDraft: draft }));
   }, []);
 
-  const setImportDraft = React.useCallback((draft: ImportDraft) => {
-    setState(prev => ({ ...prev, importDraft: draft }));
+  const setImportDraft = React.useCallback((draft: ImportDraft | undefined | null) => {
+    setState(prev => ({ ...prev, importDraft: draft || undefined }));
   }, []);
 
   const addMaintenanceRecord = async (record: MaintenanceRecord) => {
@@ -1925,7 +1901,7 @@ ${updates.purchaseId ? `<b>Đơn hàng liên kết:</b> ${updates.purchaseId}\n`
       // We'll need the full metadata which might require another read or constructing it
       if (result.status === 'success' || result.success) {
         const newItem: ImageItem = {
-          timestamp: new Date().toLocaleString('vi-VN'),
+          timestamp: formatDateTime(new Date()),
           name: filename,
           id: result.fileId || result.id || String(Date.now()),
           url: result.url || `https://lh3.googleusercontent.com/d/${result.fileId || result.id}`,
@@ -1972,34 +1948,6 @@ ${updates.purchaseId ? `<b>Đơn hàng liên kết:</b> ${updates.purchaseId}\n`
   const deleteWallet = async (id: string) => {
     setState(prev => ({ ...prev, wallets: (prev.wallets || []).filter(w => w.id !== id) }));
     await apiService.deleteRecord('Wallets', id);
-  };
-
-  const addWalletTransaction = async (transaction: WalletTransaction) => {
-    setState(prev => {
-      // Update wallet balance automatically based on transaction type if it belongs to an INVOICE/PURCHASE?
-      // Typically we'll just record it here. We should also update the corresponding wallet's balance.
-      const updatedWallets = (prev.wallets || []).map(w => {
-        if (w.id === transaction.walletId) {
-          const newBalance = transaction.type === 'IN' ? w.balance + transaction.amount : w.balance - transaction.amount;
-          return { ...w, balance: newBalance };
-        }
-        return w;
-      });
-      return {
-        ...prev,
-        wallets: updatedWallets,
-        walletTransactions: [...(prev.walletTransactions || []), transaction]
-      };
-    });
-    
-    // First, fetch the current wallet to update its balance on remote if needed
-    const wallet = state.wallets.find(w => w.id === transaction.walletId);
-    if (wallet) {
-      const newBalance = transaction.type === 'IN' ? wallet.balance + transaction.amount : wallet.balance - transaction.amount;
-      await apiService.updateRecord('Wallets', wallet.id, { balance: newBalance });
-    }
-    
-    await apiService.createRecord('WalletTransactions', transaction);
   };
 
   return (
@@ -2051,7 +1999,6 @@ ${updates.purchaseId ? `<b>Đơn hàng liên kết:</b> ${updates.purchaseId}\n`
       addWallet,
       updateWallet,
       deleteWallet,
-      addWalletTransaction,
       syncData
     }}>
       {children}

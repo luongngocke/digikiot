@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Wallet, WalletTransaction } from '../types';
+import { Wallet } from '../types';
 import { Plus, ArrowLeftRight, Activity, X, Wallet as WalletIcon, Landmark, CreditCard, Smartphone, Coins, PiggyBank, Briefcase, Pencil, History, Image as ImageIcon } from 'lucide-react';
 import { formatNumber } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
@@ -40,7 +40,7 @@ const WALLET_CATEGORY_LABELS: Record<string, string> = {
 };
 
 export const WalletManagement: React.FC = () => {
-  const { currentUser, wallets, walletTransactions, addWallet, updateWallet, deleteWallet, addWalletTransaction } = useAppContext();
+  const { currentUser, wallets, cashTransactions, addWallet, updateWallet, addCashTransaction } = useAppContext();
 
   const [activeTab, setActiveTab] = useState<'wallets' | 'transactions'>('wallets');
   const [selectedWalletFilter, setSelectedWalletFilter] = useState<string>('ALL');
@@ -117,15 +117,14 @@ export const WalletManagement: React.FC = () => {
     const amount = parseFloat(txAmount.replace(/[^0-9-]/g, '')) || 0;
     if (amount <= 0) return;
 
-    addWalletTransaction({
-      id: generateId('WTX', walletTransactions),
-      walletId: editingWallet.id,
-      type: txType,
-      amount,
-      description: txDescription || (txType === 'IN' ? 'Nạp tiền vào ví' : 'Rút tiền khỏi ví'),
+    addCashTransaction({
+      id: generateId('CT', cashTransactions),
       date: new Date().toLocaleString('vi-VN'),
+      type: txType === 'IN' ? 'RECEIPT' : 'PAYMENT',
       category: txCategory,
-      relatedType: 'OTHER'
+      amount,
+      note: txDescription || (txType === 'IN' ? 'Nạp tiền vào ví' : 'Rút tiền khỏi ví'),
+      walletId: editingWallet.id
     });
 
     closeTransactionModal();
@@ -324,7 +323,10 @@ export const WalletManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {walletTransactions.filter(t => selectedWalletFilter === 'ALL' || t.walletId === selectedWalletFilter).map((t, idx) => {
+                  {cashTransactions
+                    .filter(t => t.walletId && (selectedWalletFilter === 'ALL' || t.walletId === selectedWalletFilter))
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map((t, idx) => {
                     const wallet = wallets.find(w => w.id === t.walletId);
                   return (
                     <tr key={`${t.id}-${idx}`} className="hover:bg-slate-50 transition-colors">
@@ -335,8 +337,8 @@ export const WalletManagement: React.FC = () => {
                         <span className="font-bold text-slate-800">{wallet?.name || '---'}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded inline-flex text-[10px] font-black uppercase ${t.type === 'IN' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                          {t.type === 'IN' ? 'THU VÀO' : 'CHI RA'}
+                        <span className={`px-2 py-1 rounded inline-flex text-[10px] font-black uppercase ${t.type === 'RECEIPT' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                          {t.type === 'RECEIPT' ? 'THU VÀO' : 'CHI RA'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -345,19 +347,19 @@ export const WalletManagement: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className={`font-black ${t.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {t.type === 'IN' ? '+' : '-'}{formatNumber(t.amount)} đ
+                        <span className={`font-black ${t.type === 'RECEIPT' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {t.type === 'RECEIPT' ? '+' : '-'}{formatNumber(t.amount)} đ
                         </span>
                       </td>
                       <td className="px-6 py-4 max-w-[250px] truncate text-xs text-slate-500 italic">
-                        {t.description}
+                        {t.note || t.description}
                       </td>
                     </tr>
                   )
                 })}
-                {walletTransactions.filter(t => selectedWalletFilter === 'ALL' || t.walletId === selectedWalletFilter).length === 0 && (
+                {cashTransactions.filter(t => t.walletId && (selectedWalletFilter === 'ALL' || t.walletId === selectedWalletFilter)).length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium italic">
                       Chưa có giao dịch nào
                     </td>
                   </tr>

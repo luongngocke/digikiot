@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, ArrowLeft, X, Barcode, UserCircle, RotateCcw, Info } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Product, InvoiceItem, Customer, CashTransaction, ReturnSalesOrder, Invoice } from '../types';
-import { formatNumber, parseFormattedNumber } from '../lib/utils';
+import { formatNumber, parseFormattedNumber, formatDateTime } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
 import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -101,7 +101,7 @@ export const CreateReturnSales: React.FC = () => {
     
     const now = new Date();
     const returnId = returnCode === 'Mã phiếu tự động' ? generateId('THB', returnSalesOrders) : returnCode;
-    const dateStr = now.toLocaleString('vi-VN');
+    const dateStr = formatDateTime(now);
 
     const order: ReturnSalesOrder = {
       id: returnId,

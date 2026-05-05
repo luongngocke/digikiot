@@ -40,7 +40,7 @@ const toDMY = (dateStr: string | undefined | null) => {
 };
 
 export const Maintenance: React.FC = () => {
-  const { maintenanceRecords, addMaintenanceRecord, updateMaintenanceRecord, maintenanceTransfers, addMaintenanceTransfer, updateMaintenanceTransfer, customers, addCustomer, suppliers, addSupplier, invoices, externalSerials, addExternalSerial, currentUser, addInvoice, products, serials, updateProduct, returnSalesOrders, tasks, updateTask } = useAppContext();
+  const { maintenanceRecords, addMaintenanceRecord, updateMaintenanceRecord, maintenanceTransfers, addMaintenanceTransfer, updateMaintenanceTransfer, customers, addCustomer, suppliers, addSupplier, invoices, externalSerials, addExternalSerial, currentUser, addInvoice, products, serials, updateProduct, returnSalesOrders, tasks, updateTask, wallets, addCashTransaction, cashTransactions } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -124,6 +124,7 @@ export const Maintenance: React.FC = () => {
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   const [invoicePaid, setInvoicePaid] = useState('');
   const [invoiceDiscount, setInvoiceDiscount] = useState(0);
+  const [invoiceWalletId, setInvoiceWalletId] = useState('');
 
   const [isSerialModalOpen, setIsSerialModalOpen] = useState(false);
   const [activeSerialProduct, setActiveSerialProduct] = useState<any>(null);
@@ -2115,6 +2116,26 @@ return (
                 <div className="flex justify-end gap-2 mt-2">
                   <button onClick={() => setInvoicePaid(formatNumber(Math.max(0, invoiceItems.reduce((acc, item) => acc + item.price * item.qty, 0) - invoiceDiscount)))} className="px-2 py-1 bg-slate-100 border border-slate-200 text-slate-600 rounded text-xs font-semibold hover:bg-slate-200">Ghi nhận nhanh: Thanh toán đủ</button>
                 </div>
+                {parseFormattedNumber(invoicePaid) > 0 && (
+                  <div className="mt-4 animate-in fade-in slide-in-from-top-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block mb-2">Chọn ví nhận tiền *</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {wallets.map((w, idx) => {
+                        const isSelected = invoiceWalletId === w.id || (!invoiceWalletId && idx === 0);
+                        return (
+                          <button
+                           key={w.id}
+                           onClick={() => setInvoiceWalletId(w.id)}
+                           className={`p-3 rounded-xl border text-left transition-colors flex flex-col gap-1 ${isSelected ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200 hover:border-slate-300'}`}
+                          >
+                            <span className={`text-[10px] font-bold ${isSelected ? 'text-blue-600' : 'text-slate-500'}`}>{w.type === 'CASH' ? 'Tiền mặt' : w.type === 'BANK' ? 'Ngân hàng' : 'Ví điện tử'}</span>
+                            <span className={`font-semibold text-sm line-clamp-1 ${isSelected ? 'text-blue-900' : 'text-slate-700'}`}>{w.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2127,14 +2148,37 @@ return (
                     return;
                   }
                   
+                  const paidVal = parseFormattedNumber(invoicePaid) || 0;
+                  const finalWalletId = invoiceWalletId || (wallets.length > 0 ? wallets[0].id : undefined);
+
+                  if (paidVal > 0 && !finalWalletId) {
+                    alert('Vui lòng tạo ít nhất một ví/tài khoản để nhận tiền!');
+                    return;
+                  }
+
                   const invoiceTotalRaw = invoiceItems.reduce((acc, item) => acc + item.price * item.qty, 0);
                   const invoiceTotal = Math.max(0, invoiceTotalRaw - invoiceDiscount);
-                  const paidVal = parseFormattedNumber(invoicePaid) || 0;
                   const newId = generateId('HD', invoices || []);
+                  const dateStr = new Date().toLocaleString('vi-VN');
+
+                  if (paidVal > 0) {
+                    const transactionId = generateId('PT', cashTransactions);
+                    addCashTransaction({
+                      id: transactionId,
+                      date: dateStr,
+                      type: 'RECEIPT',
+                      amount: paidVal,
+                      category: 'SALES_REVENUE',
+                      partner: selectedRecord?.customerName || 'Khách lẻ',
+                      note: `Thu tiền sửa chữa phiếu ${selectedRecord?.id}`,
+                      refId: newId,
+                      walletId: finalWalletId
+                    });
+                  }
 
                   const newInvoice = {
                     id: newId,
-                    date: new Date().toLocaleString('vi-VN'),
+                    date: dateStr,
                     customer: selectedRecord?.customerName || 'Khách lẻ',
                     phone: selectedRecord?.customerPhone || '',
                     total: invoiceTotal,
@@ -2142,7 +2186,8 @@ return (
                     debt: Math.max(0, invoiceTotal - paidVal),
                     discount: invoiceDiscount,
                     items: invoiceItems.map(i => ({...i, sn: i.serials?.join(', ') || undefined, importPriceTotal: i.importPriceTotal * i.qty})),
-                    paymentMethod: 'CASH',
+                    paymentMethod: finalWalletId ? (wallets.find(w => w.id === finalWalletId)?.type === 'CASH' ? 'CASH' : 'TRANSFER') : 'CASH',
+                    walletId: paidVal > 0 ? finalWalletId : undefined,
                     note: `Thanh toán sửa chữa phiếu ${selectedRecord?.id}`
                   };
 
@@ -2155,6 +2200,7 @@ return (
                   setInvoiceItems([]);
                   setInvoicePaid('');
                   setInvoiceSearchTerm('');
+                  setInvoiceWalletId('');
                   
                   // Optional: Redirect to invoice page without confirm
                   // navigate(`/invoices?id=${newId}`);

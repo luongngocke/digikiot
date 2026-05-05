@@ -236,18 +236,11 @@ export const Layout: React.FC = () => {
                 </span>
               </div>
 
-              <div className="hidden md:flex relative text-slate-600">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Tìm kiếm nhanh (F3)..." 
-                  className="bg-slate-100 hover:bg-slate-200/80 focus:bg-white focus:ring-2 focus:ring-blue-100 px-9 py-2.5 rounded-lg text-[13px] font-medium outline-none w-[420px] transition-all border border-slate-200/50 focus:border-blue-400" 
-                />
-              </div>
+
               <div className="hidden md:flex items-center gap-5 text-slate-500">
                 <Truck className="cursor-pointer hover:text-blue-600 transition-colors" size={18} />
                 <div className="relative cursor-pointer" onClick={() => setShowNotifications(!showNotifications)}>
-                  <Bell className="hover:text-blue-600 transition-colors" size={18} />
+                  <Bell className={`hover:text-blue-600 transition-colors ${lowStockProducts.length > 0 ? 'animate-ring-delay' : ''}`} size={18} />
                   {lowStockProducts.length > 0 && (
                     <span className="absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold border-2 border-white leading-none">
                       {lowStockProducts.length > 99 ? '99+' : lowStockProducts.length}
@@ -262,8 +255,15 @@ export const Layout: React.FC = () => {
                         {lowStockProducts.length > 0 ? (
                           lowStockProducts.map(p => (
                             <Link key={p.id} to={`/inventory?search=${encodeURIComponent(p.id)}`} className="flex items-start gap-3 p-3 hover:bg-rose-50/50 border-b border-slate-50 transition-colors last:border-0" onClick={() => setShowNotifications(false)}>
-                              <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
-                                <Box size={14} />
+                              <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {p.image ? (
+                                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-box"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>';
+                                  }} />
+                                ) : (
+                                  <Box size={14} />
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-bold text-slate-800 truncate">{p.name}</p>

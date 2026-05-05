@@ -66,6 +66,8 @@ export interface Invoice {
   discount?: number;
   note?: string;
   taskId?: string;
+  paymentMethod?: 'CASH' | 'TRANSFER' | 'CARD' | 'WALLET';
+  walletId?: string;
 }
 
 export interface ImportItem {
@@ -277,18 +279,6 @@ export interface Wallet {
   backgroundImage?: string;
 }
 
-export interface WalletTransaction {
-  id: string;
-  walletId: string;
-  type: 'IN' | 'OUT';
-  amount: number;
-  description: string;
-  date: string;
-  category?: string;
-  relatedType?: 'INVOICE' | 'PURCHASE' | 'MAINTENANCE' | 'OTHER';
-  relatedId?: string;
-}
-
 export interface ExternalSerial {
   id: string;
   date: string;
@@ -366,5 +356,4 @@ export interface AppState {
   importDraft?: ImportDraft;
   printSettings: PrintSettings;
   wallets: Wallet[];
-  walletTransactions: WalletTransaction[];
 }

@@ -17,8 +17,12 @@ export const apiService = {
       try {
         result = JSON.parse(textResponse);
       } catch (e) {
+        if (textResponse.trim().startsWith('<!DOCTYPE') || textResponse.trim().startsWith('<html')) {
+          console.warn(`[API] Expected JSON but got HTML for ${sheetName}. The sheet might not exist in your Google Spreadsheet or there was a server error.`);
+          return [];
+        }
         console.error(`Failed to parse JSON for ${sheetName}. Response was:`, textResponse.substring(0, 100));
-        throw e;
+        return [];
       }
       console.log(`[API] readSheet(${sheetName}) response:`, result);
       

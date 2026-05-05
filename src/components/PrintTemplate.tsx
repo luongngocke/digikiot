@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { formatNumber } from '../lib/utils';
+import { formatNumber, formatDateTime } from '../lib/utils';
 import { useAppContext } from '../context/AppContext';
 import { numberToWordsVN } from '../lib/numberToWords';
 
@@ -25,6 +25,8 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({
   title, id, date, partner, phone, address, items, total, paid, debt, oldDebt = 0, discount, note, type
 }) => {
   const { printSettings } = useAppContext();
+
+  const formattedDate = formatDateTime(date);
 
   const content = (
     <div id="print-section" className="fixed top-0 left-0 w-full min-h-screen bg-white text-slate-900 font-sans z-[999999] opacity-0 pointer-events-none print:relative print:opacity-100 print:z-auto print:pointer-events-auto p-4 md:p-8 shadow-inner text-[11px] md:text-sm">
@@ -60,7 +62,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({
              <span className="text-sm font-black font-mono text-slate-900">{id}</span>
           </div>
           <p className="text-[10px] font-medium text-slate-500 italic">
-            Ngày: {date.split(',')[0]}
+            Ngày: {formattedDate}
           </p>
         </div>
       </div>
@@ -187,7 +189,7 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({
         <p className="text-slate-600 font-bold text-[9px] uppercase tracking-wider italic mb-1.5">
           {printSettings.footNote}
         </p>
-        <p className="text-[8px] text-slate-400 font-medium tracking-tight">Cường Tín ERP System - In lúc: {new Date().toLocaleString('vi-VN')}</p>
+        <p className="text-[8px] text-slate-400 font-medium tracking-tight">Cường Tín ERP System - In lúc: {formatDateTime(new Date())}</p>
       </div>
 
       {/* Print Helper for hidden UI in screen but visible in print */}

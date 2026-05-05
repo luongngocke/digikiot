@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Plus, UserPlus, UserCircle, CheckCircle, Check, X, Trash2, Printer, Barcode, ChevronDown, Edit3, PieChart, ShoppingCart, Tag, Image as ImageIcon, ArrowLeft, Info, FileText, Wallet } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Product, InvoiceItem, Customer, CashTransaction } from '../types';
-import { formatNumber, parseFormattedNumber } from '../lib/utils';
+import { formatNumber, parseFormattedNumber, formatDateTime } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
 import { NumericFormat } from 'react-number-format';
 import { PrintTemplate } from '../components/PrintTemplate';
@@ -240,6 +240,8 @@ return (
 
   const addTab = () => {
     const newId = tabs.length > 0 ? Math.max(...tabs.map(t => t.id)) + 1 : 1;
+    const now = new Date();
+    const defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const newTab = { 
       id: newId, 
       name: `Hóa đơn ${newId}`,
@@ -248,7 +250,8 @@ return (
       paid: '' as string,
       selectedCustomer: null,
       note: '',
-      paymentMethod: 'CASH' as 'CASH' | 'TRANSFER' | 'CARD' | 'WALLET'
+      paymentMethod: 'CASH' as 'CASH' | 'TRANSFER' | 'CARD' | 'WALLET',
+      date: defaultDate
     };
     setTabs([...tabs, newTab]);
     setActiveTab(tabs.length);
@@ -419,9 +422,9 @@ return (
       const now = new Date();
       const invoiceId = currentTab.editingInvoiceId || generateId('HD', invoices);
       
-      // Convert datetime-local value to visual format "HH:mm:ss dd/mm/yyyy"
+      // Convert datetime-local value to visual format "dd/mm/yyyy HH:mm:ss"
       const [y, m, d, hh, min] = date.split(/[-T:]/);
-      const dateStr = `${hh}:${min}:00 ${d}/${m}/${y}`;
+      const dateStr = `${d}/${m}/${y} ${hh}:${min}:00`;
       
       const customerName = selectedCustomer ? selectedCustomer.name : 'Khách lẻ';
 
@@ -437,6 +440,8 @@ return (
         discount: discount,
         note: note,
         taskId: tabTaskId || undefined,
+        paymentMethod: currentTab.paymentMethod,
+        walletId: finalWalletId,
         items: cart.map(item => {
           const p = products.find(prod => prod.id === item.id);
           let warrantyExpiry = undefined;
@@ -497,12 +502,16 @@ return (
         });
       }
 
-      setCart([]);
-      setDiscount(0);
-      setPaid('');
-      setSelectedCustomer(null);
-      setNote('');
-      setPaymentMethod('CASH');
+      updateCurrentTab({
+        cart: [],
+        discount: 0,
+        paid: '',
+        selectedCustomer: null,
+        note: '',
+        paymentMethod: 'CASH',
+        editingInvoiceId: undefined,
+        taskId: undefined
+      });
       setIsMobileCheckoutOpen(false);
       setCheckoutConfirmModal(null);
       
@@ -518,7 +527,7 @@ return (
           updateTask(finalTaskId, { 
             ...task, 
             status: 'COMPLETED', 
-            completedAt: new Date().toLocaleString('vi-VN'),
+            completedAt: formatDateTime(new Date()),
             purchaseId: invoiceId
           });
         }
@@ -560,6 +569,8 @@ return (
             <div className="flex gap-3">
               <button 
                 onClick={() => {
+                  const now = new Date();
+                  const defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
                   setTabs([{ 
                     id: 1, 
                     name: 'Hóa đơn 1',
@@ -568,7 +579,8 @@ return (
                     paid: '',
                     selectedCustomer: null,
                     note: '',
-                    paymentMethod: 'CASH'
+                    paymentMethod: 'CASH',
+                    date: defaultDate
                   }]);
                   setActiveTab(0);
                   setPOSDraft(null);
@@ -825,6 +837,13 @@ return (
             <h3 className="font-bold flex-1">Thanh toán</h3>
           </div>
           <div className="p-4 flex flex-col gap-4 overflow-y-auto flex-1">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+               <h3 className="text-sm font-bold text-slate-800">Mã Chứng Từ</h3>
+               <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
+                 {currentTab.editingInvoiceId || generateId('HD', invoices)}
+               </span>
+            </div>
+
             {/* Customer Selection */}
             <div className="flex flex-col gap-2">
               {!selectedCustomer ? (
@@ -1324,9 +1343,9 @@ return (
             {(mobileCustomerSearchTerm.trim() 
               ? customers.filter(c => c.name.toLowerCase().includes(mobileCustomerSearchTerm.toLowerCase()) || c.phone.includes(mobileCustomerSearchTerm))
               : customers
-            ).map(c => (
+            ).map((c, idx) => (
               <div 
-                key={c.phone} 
+                key={`${c.id || c.phone}-${idx}`} 
                 onClick={() => {
                   setSelectedCustomer(c);
                   setIsMobileCustomerSearchOpen(false);
@@ -1455,9 +1474,10 @@ return (
               <button 
                 onClick={() => {
                   const name = (document.getElementById('new-cust-name') as HTMLInputElement).value;
-                  const phone = (document.getElementById('new-cust-phone') as HTMLInputElement).value;
+                  let phone = (document.getElementById('new-cust-phone') as HTMLInputElement).value;
                   const address = (document.getElementById('new-cust-address') as HTMLInputElement).value;
                   if (name && phone) {
+                    phone = phone.startsWith('0') ? phone : '0' + phone;
                     addCustomer({ name, phone, address });
                     setSelectedCustomer({ name, phone, address });
                     setIsCustomerModalOpen(false);

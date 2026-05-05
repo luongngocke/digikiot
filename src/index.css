@@ -9,8 +9,17 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+  .animate-ring-delay {
+    animation: ring-bell 6s infinite;
+    transform-origin: top center;
+  }
 }
 
+@keyframes ring-bell {
+  0%, 16%, 100% { transform: rotate(0); }
+  2%, 6%, 10%, 14% { transform: rotate(15deg); }
+  4%, 8%, 12% { transform: rotate(-15deg); }
+}
 
 @theme {
   --font-sans: "Be Vietnam Pro", "Inter", ui-sans-serif, system-ui, sans-serif;
