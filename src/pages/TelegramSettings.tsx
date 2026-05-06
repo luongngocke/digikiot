@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Save, ArrowLeft, Bell, Info, ExternalLink } from 'lucide-react';
+import { Send, Save, ArrowLeft, Bell, Info, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { useMobileBackModal } from '../hooks/useMobileBackModal';
@@ -121,6 +121,42 @@ export const TelegramSettings: React.FC = () => {
               >
                 <Save size={16} />
                 {isSaving ? 'Đang lưu...' : isSaved ? 'Đã lưu cấu hình' : 'Lưu cấu hình'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/telegram/test-report');
+                    const data = await res.json();
+                    if (data.success) alert(data.message || 'Đã gửi thử báo cáo doanh thu!');
+                    else alert('Lỗi: ' + data.error);
+                  } catch (e) {
+                    alert('Không thể kết nối đến server');
+                  }
+                }}
+                className="bg-white border border-blue-200 text-blue-600 font-black text-[10px] uppercase py-3 rounded-2xl hover:bg-blue-50 transition-all active:scale-95 flex flex-col items-center gap-1 shadow-sm"
+              >
+                <Send size={16} />
+                <span>Thử Báo Cáo</span>
+              </button>
+              
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/telegram/test-stock');
+                    const data = await res.json();
+                    if (data.success) alert(data.message || 'Đã gửi thử cảnh báo tồn kho!');
+                    else alert('Lỗi: ' + data.error);
+                  } catch (e) {
+                    alert('Không thể kết nối đến server');
+                  }
+                }}
+                className="bg-white border border-orange-200 text-orange-600 font-black text-[10px] uppercase py-3 rounded-2xl hover:bg-orange-50 transition-all active:scale-95 flex flex-col items-center gap-1 shadow-sm"
+              >
+                <AlertTriangle size={16} />
+                <span>Thử Tồn Kho</span>
               </button>
             </div>
           </div>

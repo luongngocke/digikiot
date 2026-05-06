@@ -31,7 +31,7 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { formatNumber, formatDateTime } from '../lib/utils';
+import { formatNumber, formatDateTime, smartParseDate } from '../lib/utils';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { 
@@ -83,54 +83,8 @@ export const Dashboard: React.FC = () => {
   }, [products]);
 
   const parseDate = (dateStr: any) => {
-    if (!dateStr) return new Date(0);
-    
-    const str = String(dateStr);
-    // Clean up the string: split by space, comma, or 'T'
-    const tokens = str.split(/[\s,T]+/);
-    // Find the token that looks like a date (contains / or -), fallback to first token
-    const datePart = tokens.find(t => t.includes('/') || t.includes('-')) || tokens[0];
-    
-    let d: Date;
-    // Handle DD/MM/YYYY
-    if (datePart.includes('/')) {
-      const parts = datePart.split('/');
-      if (parts.length === 3) {
-        // If first part is 4 digits, it's YYYY/MM/DD
-        if (parts[0].length === 4) {
-          d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        } else {
-          // Otherwise assume DD/MM/YYYY
-          d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-        }
-      } else {
-        d = new Date(str);
-      }
-    } else if (datePart.includes('-')) {
-      // Handle YYYY-MM-DD
-      const parts = datePart.split('-');
-      if (parts.length === 3) {
-        if (parts[0].length === 4) {
-          d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        } else {
-          // Assume DD-MM-YYYY
-          d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-        }
-      } else {
-        d = new Date(str);
-      }
-    } else {
-      // Check if it's a numeric timestamp
-      if (!isNaN(Number(str))) {
-        d = new Date(Number(str));
-      } else {
-        d = new Date(str);
-      }
-    }
-
-    // Return a date object set to midnight for accurate comparison
-    if (isNaN(d.getTime())) return new Date(0);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const date = smartParseDate(dateStr);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   };
 
   const getRangeLabel = () => {

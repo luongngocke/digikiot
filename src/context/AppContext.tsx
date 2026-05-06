@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { AppState, Product, Customer, Supplier, Invoice, ImportOrder, CashTransaction, POSDraft, ImportDraft, MaintenanceRecord, MaintenanceTransfer, ReturnImportOrder, ReturnSalesOrder, User, Serial, StockCard, PrintSettings, ExternalSerial, ImageItem, Task, TelegramSettings, WifiRecord, CameraAccountRecord, Wallet } from '../types';
 import { apiService } from '../services/api';
 import { generateId } from '../lib/idUtils';
-import { formatDateTime, padPhone } from '../lib/utils';
+import { formatDateTime, padPhone, formatSnForDb, parseSnFromDb, parseFormattedNumber } from '../lib/utils';
 import { sendNotification, sendTelegramMessage } from '../lib/notification';
 
 interface AppContextProps extends AppState {
@@ -209,8 +209,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const mappedProducts = apiProducts.length > 0 ? apiProducts.map((p: any) => ({
           id: String(p.id || ''),
           name: String(p.name || ''),
-          price: Number(p.salePrice) || 0,
-          importPrice: Number(p.costPrice) || 0,
+          price: parseFormattedNumber(p.salePrice),
+          importPrice: parseFormattedNumber(p.costPrice),
           stock: Number(p.stock) || 0,
           hasSerial: p.hasSerial === true || p.hasSerial === 'TRUE' || p.hasSerial === 'true' || p.hasSerial === 1,
           isService: p.isService === true || p.isService === 'TRUE' || p.isService === 'true' || p.isService === 1,
@@ -236,15 +236,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               const prodId = String(d.productId || d.productID || d.ProductID || d.productid || '');
               const product = mappedProducts.find((p: any) => p.id === prodId);
               const qty = Number(d.quantity || d.qty || d.Quantity || d.Qty || 0);
+              
+              const rawSn = parseSnFromDb(d.sn || d.SN || d.serial || d.Serial || d.serials || d.Serials);
+              const snArray = rawSn ? (typeof rawSn === 'string' ? rawSn.split(',').map(s => s.trim()).filter(Boolean) : (Array.isArray(rawSn) ? rawSn : [])) : [];
+
               return {
                 id: prodId,
                 name: product?.name || 'Sản phẩm',
-                price: Number(d.price || d.Price || 0),
+                price: parseFormattedNumber(d.price || d.Price || 0),
                 qty: qty,
-                sn: (d.sn || d.SN || d.serial || d.Serial || d.serials || d.Serials) ? String(d.sn || d.SN || d.serial || d.Serial || d.serials || d.Serials) : undefined,
+                sn: snArray,
                 unit: d.unit || d.Unit || undefined,
                 warrantyExpiry: d.warrantyExpiry || d.WarrantyExpiry || undefined,
-                importPriceTotal: Number(d.importPriceTotal || d.ImportPriceTotal || (product?.importPrice || 0) * qty)
+                importPriceTotal: parseFormattedNumber(d.importPriceTotal || d.ImportPriceTotal || (product?.importPrice || 0) * qty)
               };
             });
           }
@@ -262,9 +266,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         };
 
         const mappedInvoices = apiInvoices.length > 0 ? apiInvoices.map((inv: any) => {
-            const total = Number(inv.finalAmount || inv.total || 0);
-            const paid = Number(inv.paidAmount || inv.paid || 0);
-            const debt = inv.debt !== undefined ? Number(inv.debt) : (total - paid);
+            const total = parseFormattedNumber(inv.finalAmount || inv.total || 0);
+            const paid = parseFormattedNumber(inv.paidAmount || inv.paid || 0);
+            const debt = inv.debt !== undefined ? parseFormattedNumber(inv.debt) : (total - paid);
             return {
               id: String(inv.id || ''),
               date: formatDateTime(inv.createdAt || inv.date),
@@ -274,9 +278,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               total,
               paid,
               debt,
-              oldDebt: inv.oldDebt !== undefined ? Number(inv.oldDebt) : undefined,
-              totalDebt: inv.totalDebt !== undefined ? Number(inv.totalDebt) : undefined,
-              discount: Number(inv.discount || 0),
+              oldDebt: inv.oldDebt !== undefined ? parseFormattedNumber(inv.oldDebt) : undefined,
+              totalDebt: inv.totalDebt !== undefined ? parseFormattedNumber(inv.totalDebt) : undefined,
+              discount: parseFormattedNumber(inv.discount || 0),
               note: String(inv.note || ''),
               taskId: String(inv.taskId || inv.taskID || inv.TaskID || ''),
               paymentMethod: (inv.paymentMethod as any) || 'CASH',
@@ -290,10 +294,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               id: String(ret.id || ''),
               date: formatDateTime(ret.createdAt || ret.date),
               customer: String(ret.customerID || ret.customer || ''),
-              totalGoods: Number(ret.totalGoods || 0),
-              discount: Number(ret.discount || 0),
-              total: Number(ret.totalAmount || ret.totalRefund || ret.total || 0),
-              paid: Number(ret.paidAmount || ret.paid || 0),
+              totalGoods: parseFormattedNumber(ret.totalGoods || 0),
+              discount: parseFormattedNumber(ret.discount || 0),
+              total: parseFormattedNumber(ret.totalAmount || ret.totalRefund || ret.total || 0),
+              paid: parseFormattedNumber(ret.paidAmount || ret.paid || 0),
               status: ret.status || 'DONE',
               note: String(ret.note || ''),
               items: extractItems(ret, apiReturnSalesDetails, ['returnID', 'returnId', 'ReturnID', 'returnid', 'returnSalesId'])
@@ -305,10 +309,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               id: String(ret.id || ''),
               date: formatDateTime(ret.createdAt || ret.date),
               supplier: String(ret.supplierId || ret.supplier || ''),
-              totalGoods: Number(ret.totalGoods || 0),
-              discount: Number(ret.discount || 0),
-              total: Number(ret.totalAmount || ret.totalRefund || ret.total || 0),
-              received: Number(ret.receivedAmount || ret.received || 0),
+              totalGoods: parseFormattedNumber(ret.totalGoods || 0),
+              discount: parseFormattedNumber(ret.discount || 0),
+              total: parseFormattedNumber(ret.totalAmount || ret.totalRefund || ret.total || 0),
+              received: parseFormattedNumber(ret.receivedAmount || ret.received || 0),
               status: ret.status || 'DONE',
               note: String(ret.note || ''),
               items: extractItems(ret, apiReturnImportDetails, ['returnID', 'returnId', 'ReturnID', 'returnid', 'returnImportId'])
@@ -318,24 +322,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const soldSerials = new Set<string>();
         mappedInvoices.forEach((inv: any) => {
           inv.items.forEach((item: any) => {
-            if (item.sn && typeof item.sn === 'string') {
-              item.sn.split(',').forEach((s: string) => soldSerials.add(s.trim()));
+            if (item.sn && Array.isArray(item.sn)) {
+              item.sn.forEach((s: string) => soldSerials.add(s.trim()));
             }
           });
         });
 
         mappedReturnImports.forEach((ret: any) => {
           ret.items.forEach((item: any) => {
-            if (item.sn && typeof item.sn === 'string') {
-              item.sn.split(',').forEach((s: string) => soldSerials.add(s.trim()));
+            if (item.sn && Array.isArray(item.sn)) {
+              item.sn.forEach((s: string) => soldSerials.add(s.trim()));
             }
           });
         });
 
         mappedReturnSales.forEach((ret: any) => {
           ret.items.forEach((item: any) => {
-            if (item.sn && typeof item.sn === 'string') {
-              item.sn.split(',').forEach((s: string) => soldSerials.delete(s.trim()));
+            if (item.sn && Array.isArray(item.sn)) {
+              item.sn.forEach((s: string) => soldSerials.delete(s.trim()));
             }
           });
         });
@@ -361,40 +365,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             note: String(c.note || ''),
             createdBy: String(c.createdBy || ''),
             createdAt: String(c.createdAt || ''),
-            totalSpent: Number(c.totalSpent) || 0,
-            debt: Number(c.debt) || 0
+            totalSpent: parseFormattedNumber(c.totalSpent),
+            debt: parseFormattedNumber(c.debt)
           })) : [],
           suppliers: apiSuppliers.length > 0 ? apiSuppliers.map((s: any) => ({
             id: String(s.id || ''),
             name: String(s.name || ''),
             phone: padPhone(s.phone),
             address: String(s.address || ''),
-            totalDebt: Number(s.debt) || 0
+            totalDebt: parseFormattedNumber(s.debt)
           })) : [],
           serials: apiSerials.length > 0 ? apiSerials.map((s: any) => {
-            const sn = String(s.sn || '').trim();
+            const sn = parseSnFromDb(s.sn)?.trim() || '';
             return {
               prodId: String(s.prodId || ''),
               sn,
               supplier: String(s.supplier || ''),
-              importPrice: Number(s.importPrice) || 0,
+              importPrice: parseFormattedNumber(s.importPrice),
               date: formatDateTime(s.createdAt || s.date),
               refId: String(s.refId || ''),
               status: soldSerials.has(sn) ? 'SOLD' : 'AVAILABLE'
             };
           }) : [],
-          stockCards: apiStockCards.length > 0 ? apiStockCards.map((c: any) => ({
-            ...c,
-            sn: c.sn ? (typeof c.sn === 'string' ? c.sn.split(',') : c.sn) : []
-          })) : [],
+          stockCards: apiStockCards.length > 0 ? apiStockCards.map((c: any) => {
+            const snVal = parseSnFromDb(c.sn);
+            return {
+              ...c,
+              sn: snVal ? (typeof snVal === 'string' ? snVal.split(',') : snVal) : []
+            };
+          }) : [],
           invoices: mappedInvoices,
           importOrders: apiImports.length > 0 ? apiImports.map((imp: any) => {
-            const total = Number(imp.totalAmount || imp.total || 0);
-            const paid = Number(imp.paidAmount || imp.paid || 0);
+            const total = parseFormattedNumber(imp.totalAmount || imp.total || 0);
+            const paid = parseFormattedNumber(imp.paidAmount || imp.paid || 0);
             // Calculate debt based on total and paid, ignore the debt field from API if it's 0 but total > paid
             let debt = total - paid;
             if (imp.debt !== undefined && imp.debt !== '' && imp.debt !== null) {
-                const apiDebt = Number(imp.debt);
+                const apiDebt = parseFormattedNumber(imp.debt);
                 // Only use API debt if it makes sense (e.g., if total is 0, or if apiDebt is not 0 when total > paid)
                 if (apiDebt !== 0 || total === paid) {
                     debt = apiDebt;
@@ -409,31 +416,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               total,
               paid,
               debt,
-              discount: Number(imp.discount || 0),
-              returnCost: Number(imp.returnCost || 0),
-              shippingFee: Number(imp.shippingFee || 0),
-              otherCost: Number(imp.otherCost || 0),
+              discount: parseFormattedNumber(imp.discount || 0),
+              returnCost: parseFormattedNumber(imp.returnCost || 0),
+              shippingFee: parseFormattedNumber(imp.shippingFee || 0),
+              otherCost: parseFormattedNumber(imp.otherCost || 0),
               note: String(imp.note || ''),
               walletId: String(imp.walletId || ''),
-              items: extractItems(imp, apiImportDetails, ['importID', 'importId', 'ImportID', 'importid']).map((item: any) => ({
-                ...item,
-                sn: typeof item.sn === 'string' ? item.sn.split(',').map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(item.sn) ? item.sn : [])
-              }))
+              items: extractItems(imp, apiImportDetails, ['importID', 'importId', 'ImportID', 'importid'])
             };
           }) : [],
-          returnImportOrders: mappedReturnImports.map((ret: any) => ({
-            ...ret,
-            items: ret.items.map((item: any) => ({
-              ...item,
-              sn: typeof item.sn === 'string' ? item.sn.split(',').map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(item.sn) ? item.sn : [])
-            }))
-          })),
+          returnImportOrders: mappedReturnImports,
           returnSalesOrders: mappedReturnSales,
           cashTransactions: apiCash.length > 0 ? apiCash.map((c: any) => ({
             id: String(c.id || ''),
             date: formatDateTime(c.createdAt || c.date),
             type: c.type as 'RECEIPT' | 'PAYMENT',
-            amount: Number(c.amount || 0),
+            amount: parseFormattedNumber(c.amount || 0),
             category: c.category as any,
             partner: String(c.partner || ''),
             note: String(c.note || ''),
@@ -449,7 +447,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             serialNumber: String(m.serialNumber || ''),
             issue: String(m.issue || ''),
             status: m.status || 'RECEIVING',
-            cost: Number(m.cost || 0),
+            cost: parseFormattedNumber(m.cost || 0),
             note: String(m.note || ''),
             returnDate: String(m.returnDate || ''),
             transferId: m.transferId ? String(m.transferId) : undefined,
@@ -464,8 +462,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             supplierName: String(t.supplierName || ''),
             accessories: String(t.accessories || ''),
             status: t.status || 'Đóng hàng',
-            repairCost: Number(t.repairCost || 0),
-            shippingCost: Number(t.shippingCost || t.shippingcost || 0),
+            repairCost: parseFormattedNumber(t.repairCost || 0),
+            shippingCost: parseFormattedNumber(t.shippingCost || t.shippingcost || 0),
             transferDate: String(t.transferDate || ''),
             returnDate: String(t.returnDate || ''),
             note: String(t.note || '')
@@ -475,7 +473,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             date: String(e.date || ''),
             customer: String(e.customer || ''),
             product: String(e.product || ''),
-            sn: String(e.sn || ''),
+            sn: parseSnFromDb(e.sn) || '',
             source: String(e.source || ''),
             createdBy: String(e.createdBy || ''),
             note: String(e.note || '')
@@ -549,7 +547,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               id: String(w.id || ''),
               name: String(w.name || ''),
               type: (w.type === 'CASH' || w.type === 'BANK' || w.type === 'EWALLET') ? w.type : 'CASH',
-              balance: Number(w.balance || 0),
+              balance: parseFormattedNumber(w.balance || 0),
               accountNumber: w.accountNumber ? String(w.accountNumber) : undefined,
               bankName: w.bankName ? String(w.bankName) : undefined,
               ownerName: w.ownerName ? String(w.ownerName) : undefined,
@@ -606,10 +604,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 customer: String(inv.customerID || inv.customer || ''),
                 phone: padPhone(inv.phone),
                 address: String(inv.address || ''),
-                total: Number(inv.finalAmount || inv.total || 0),
-                paid: Number(inv.paidAmount || inv.paid || 0),
-                debt: Number(inv.debt || 0),
-                discount: Number(inv.discount || 0),
+                total: parseFormattedNumber(inv.finalAmount || inv.total || 0),
+                paid: parseFormattedNumber(inv.paidAmount || inv.paid || 0),
+                debt: parseFormattedNumber(inv.debt || 0),
+                discount: parseFormattedNumber(inv.discount || 0),
                 note: String(inv.note || ''),
                 taskId: String(inv.taskId || ''),
                 paymentMethod: (inv.paymentMethod as any) || 'CASH',
@@ -1002,7 +1000,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               quantity: newItem.qty,
               price: newItem.price,
               subTotal: newItem.qty * newItem.price,
-              sn: newItem.sn || '',
+              sn: formatSnForDb(newItem.sn),
               warrantyExpiry: newItem.warrantyExpiry || ''
             };
             
@@ -1017,7 +1015,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               date: newInvoice.date,
               price: newItem.price,
               refId: newInvoice.id,
-              sn: newItem.sn || ''
+              sn: formatSnForDb(newItem.sn)
             };
             
             if (isUpdate && i < existingInvoice.items.length) {
@@ -1278,7 +1276,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               quantity: newItem.qty,
               price: newItem.price,
               subTotal: newItem.qty * newItem.price,
-              sn: newItem.sn ? newItem.sn.join(',') : ''
+              sn: formatSnForDb(newItem.sn)
             };
             
             const stockCardData = {
@@ -1291,7 +1289,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               date: newOrder.date,
               price: newItem.price,
               refId: newOrder.id,
-              sn: newItem.sn ? newItem.sn.join(',') : ''
+              sn: formatSnForDb(newItem.sn)
             };
 
             if (isUpdate && i < (existingOrder?.items.length || 0)) {
@@ -1441,7 +1439,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             quantity: item.qty,
             price: item.price,
             subTotal: item.qty * item.price,
-            sn: item.sn ? item.sn.join(',') : ''
+            sn: formatSnForDb(item.sn)
           });
 
           await apiService.createRecord('StockCards', {
@@ -1453,7 +1451,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             date: order.date,
             price: item.price,
             refId: order.id,
-            sn: item.sn ? item.sn.join(',') : ''
+            sn: formatSnForDb(item.sn)
           });
         }
       } catch (error) {
@@ -1518,7 +1516,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             quantity: item.qty,
             price: item.price,
             subTotal: item.qty * item.price,
-            sn: item.sn || ''
+            sn: formatSnForDb(item.sn)
           });
 
           await apiService.createRecord('StockCards', {
@@ -1530,7 +1528,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             date: order.date,
             price: item.price,
             refId: order.id,
-            sn: item.sn || ''
+            sn: formatSnForDb(item.sn)
           });
         }
       } catch (error) {
@@ -1546,13 +1544,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState(prev => ({ ...prev, stockCards: [...(prev.stockCards || []), cardWithId] }));
     await apiService.createRecord('StockCards', {
       ...cardWithId,
-      sn: card.sn ? card.sn.join(',') : ''
+      sn: formatSnForDb(card.sn)
     });
   };
 
   const addSerial = async (serial: Serial) => {
     setState(prev => ({ ...prev, serials: [...(prev.serials || []), serial] }));
-    await apiService.createRecord('Serials', { ...serial, id: serial.sn });
+    const formattedSn = formatSnForDb(serial.sn);
+    await apiService.createRecord('Serials', { ...serial, sn: formattedSn, id: formattedSn });
   };
 
   const removeSerial = async (sn: string) => {
@@ -1673,11 +1672,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addExternalSerial = async (serial: ExternalSerial) => {
     setState(prev => ({ ...prev, externalSerials: [...(prev.externalSerials || []), serial] }));
+    const formattedSn = formatSnForDb(serial.sn);
     await apiService.createRecord('ExternalSerials', {
       id: serial.id,
       date: serial.date,
       product: serial.product,
-      sn: serial.sn,
+      sn: formattedSn,
       customer: serial.customer || '',
       source: serial.source || '',
       createdBy: serial.createdBy || '',
@@ -1690,7 +1690,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ...prev,
       externalSerials: (prev.externalSerials || []).map(s => s.id === id ? { ...s, ...updates } : s)
     }));
-    await apiService.updateRecord('ExternalSerials', id, updates);
+    await apiService.updateRecord('ExternalSerials', id, {
+      ...updates,
+      sn: updates.sn !== undefined ? formatSnForDb(updates.sn) : undefined
+    });
   };
 
   const deleteExternalSerial = async (id: string) => {
