@@ -370,24 +370,24 @@ return (
       {/* Supplier Detail Modal */}
       {selectedSupplier && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="bg-slate-50 w-full max-w-4xl h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col">
+          <div className="bg-slate-50 w-full max-w-6xl h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col">
             <div className="bg-white p-6 border-b border-slate-200 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg">
                   <Truck size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-800 tracking-tighter">{selectedSupplier.name}</h3>
-                  <p className="text-xs text-slate-500 font-bold tracking-widest">{selectedSupplier.phone}</p>
+                  <h3 className="text-xl md:text-3xl font-bold text-slate-800 tracking-tighter uppercase">{selectedSupplier.name}</h3>
+                  <p className="text-xs md:text-lg text-slate-500 font-bold tracking-widest">ID: {selectedSupplier.id} | {selectedSupplier.phone}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {getSupplierStats(selectedSupplier.name).debt > 0 && (
                   <button 
                     onClick={() => handleOpenPaymentModal('ALL', null, getSupplierStats(selectedSupplier.name).debt)}
-                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-700 transition-all active:scale-95 shadow-md shadow-emerald-100"
+                    className="px-4 py-2 md:px-6 md:py-3 bg-emerald-600 text-white rounded-lg text-[10px] md:text-sm font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-700 transition-all active:scale-95 shadow-md shadow-emerald-100"
                   >
-                    <CreditCard size={14} /> Thanh toán nợ
+                    <CreditCard size={14} className="md:size-18" /> Thanh toán nợ
                   </button>
                 )}
                 <button onClick={() => setSelectedSupplier(null)} className="w-10 h-10 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center">
@@ -396,104 +396,104 @@ return (
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8">
               {/* Stats Cards */}
               {(() => {
                 const stats = getSupplierStats(selectedSupplier.name);
                 return (
                   <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-6">
-                      <div className="bg-[#f0f7ff] p-2.5 rounded-lg flex flex-col justify-between h-[72px]">
-                        <span className="text-[10px] font-bold text-blue-600">Đơn nhập</span>
-                        <p className="text-lg font-bold text-blue-700 leading-none">{stats.count}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6 mb-8">
+                      <div className="bg-[#f0f7ff] p-4 rounded-xl flex flex-col justify-between h-[90px] md:h-[120px]">
+                        <span className="md:text-sm text-[10px] font-bold text-blue-600 uppercase tracking-wider">Đơn nhập</span>
+                        <p className="md:text-4xl text-lg font-bold text-blue-700 leading-none">{stats.count}</p>
                       </div>
                       
-                      <div className="bg-[#f0fff4] p-2.5 rounded-lg flex flex-col justify-between h-[72px]">
-                        <span className="text-[10px] font-bold text-emerald-600">Tổng nhập</span>
-                        <p className="text-lg font-bold text-emerald-700 leading-none">
-                          {formatNumber(stats.total)} <span className="text-[10px]">đ</span>
+                      <div className="bg-[#f0fff4] p-4 rounded-xl flex flex-col justify-between h-[90px] md:h-[120px]">
+                        <span className="md:text-sm text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Tổng nhập</span>
+                        <p className="md:text-3xl text-lg font-bold text-emerald-700 leading-none">
+                          {formatNumber(stats.total)} <span className="text-[10px] md:text-sm">đ</span>
                         </p>
                       </div>
 
-                      <div className="bg-[#fff5f5] p-2.5 rounded-lg flex flex-col justify-between h-[72px]">
-                        <span className="text-[10px] font-bold text-red-500">Nợ NCC</span>
-                        <p className="text-lg font-bold text-red-600 leading-none">
-                          {formatNumber(stats.debt)} <span className="text-[10px]">đ</span>
+                      <div className="bg-[#fff5f5] p-4 rounded-xl flex flex-col justify-between h-[90px] md:h-[120px]">
+                        <span className="md:text-sm text-[10px] font-bold text-red-500 uppercase tracking-wider">Nợ NCC</span>
+                        <p className="md:text-3xl text-lg font-bold text-red-600 leading-none">
+                          {formatNumber(stats.debt)} <span className="text-[10px] md:text-sm">đ</span>
                         </p>
                       </div>
 
-                      <div className="bg-[#fffaf0] p-2.5 rounded-lg flex flex-col justify-between h-[72px]">
-                        <span className="text-[10px] font-bold text-orange-600">Lần cuối</span>
-                        <p className="text-lg font-bold text-orange-700 leading-none">
+                      <div className="bg-[#fffaf0] p-4 rounded-xl flex flex-col justify-between h-[90px] md:h-[120px]">
+                        <span className="md:text-sm text-[10px] font-bold text-orange-600 uppercase tracking-wider">Lần cuối</span>
+                        <p className="md:text-2xl text-lg font-bold text-orange-700 leading-none">
                           {stats.lastOrder ? (stats.lastOrder.split(' ').find(p => p.includes('/')) || stats.lastOrder.split(' ')[0]) : '---'}
                         </p>
                       </div>
 
-                      <div className="bg-[#f0fbfa] p-2.5 rounded-lg flex flex-col justify-between h-[72px] sm:col-span-1 col-span-2 sm:flex hidden">
-                        <span className="text-[10px] font-bold text-teal-600">Tỷ lệ TT</span>
-                        <p className="text-lg font-bold text-teal-700 leading-none">
+                      <div className="bg-[#f0fbfa] p-4 rounded-xl flex flex-col justify-between h-[90px] md:h-[120px] sm:col-span-1 col-span-2 sm:flex hidden">
+                        <span className="md:text-sm text-[10px] font-bold text-teal-600 uppercase tracking-wider">Tỷ lệ TT</span>
+                        <p className="md:text-4xl text-lg font-bold text-teal-700 leading-none">
                           {Math.round(stats.paymentRate)}%
                         </p>
                       </div>
 
                       {/* Mobile Payment Rate */}
-                      <div className="bg-[#f0fbfa] p-2.5 rounded-lg flex flex-col justify-between h-[72px] sm:hidden flex">
-                        <span className="text-[10px] font-bold text-teal-600">Tỷ lệ TT</span>
-                        <p className="text-lg font-bold text-teal-700 leading-none">
+                      <div className="bg-[#f0fbfa] p-4 rounded-xl flex flex-col justify-between h-[90px] md:h-[120px] sm:hidden flex">
+                        <span className="md:text-sm text-[10px] font-bold text-teal-600 uppercase tracking-wider">Tỷ lệ TT</span>
+                        <p className="md:text-3xl text-lg font-bold text-teal-700 leading-none">
                           {Math.round(stats.paymentRate)}%
                         </p>
                       </div>
                     </div>
 
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Danh sách nhập hàng</h4>
-                    <div className="space-y-3">
+                    <h4 className="text-xs md:text-lg font-black text-slate-400 uppercase tracking-[0.2em] mb-6 border-l-4 border-slate-200 pl-4">Danh sách nhập hàng</h4>
+                    <div className="space-y-4">
                       {stats.orders.length === 0 ? (
-                        <p className="text-center py-10 text-slate-400 italic text-sm">Chưa có giao dịch.</p>
+                        <p className="text-center py-10 text-slate-400 italic text-sm md:text-lg">Chưa có giao dịch.</p>
                       ) : (
                         stats.orders.map(order => (
                           <div 
                             key={order.id} 
-                            className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all cursor-pointer group/order"
+                            className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all cursor-pointer group/order"
                             onClick={() => setSelectedOrder(order)}
                           >
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                               <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/order:bg-indigo-50 group-hover/order:text-indigo-500 transition-all">
-                                  <FileText size={20} />
+                                <div className="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/order:bg-indigo-50 group-hover/order:text-indigo-500 transition-all">
+                                  <FileText size={24} />
                                 </div>
                                 <div>
-                                  <p className="font-bold text-sm text-slate-800 tracking-tight">{order.id}</p>
-                                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-semibold mt-1">
-                                    <Calendar size={12} />
+                                  <p className="font-bold text-sm md:text-xl text-slate-800 tracking-tight">{order.id}</p>
+                                  <div className="flex items-center gap-2 text-[10px] md:text-base text-slate-400 font-semibold mt-1">
+                                    <Calendar size={12} className="md:size-16" />
                                     {order.date}
                                   </div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-6">
                                 <div className="text-right">
-                                  <p className="text-[10px] font-medium text-slate-400 tracking-tight mb-0.5">Tổng tiền</p>
-                                  <p className="font-bold text-slate-800 text-sm">{formatNumber(order.total)}đ</p>
+                                  <p className="text-[10px] md:text-xs font-medium text-slate-400 tracking-tight mb-0.5 uppercase">Tổng tiền</p>
+                                  <p className="font-bold text-slate-800 text-sm md:text-xl">{formatNumber(order.total)}đ</p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-[10px] font-medium text-slate-400 tracking-tight mb-0.5">Còn nợ</p>
-                                  <p className={`font-bold text-sm ${order.debt > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                  <p className="text-[10px] md:text-xs font-medium text-slate-400 tracking-tight mb-0.5 uppercase">Còn nợ</p>
+                                  <p className={`font-bold text-sm md:text-xl ${order.debt > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                                     {formatNumber(order.debt)}đ
                                   </p>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                   {order.debt > 0 && (
                                     <button 
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleOpenPaymentModal('SINGLE', order.id, order.debt);
                                       }}
-                                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
+                                      className="p-2 md:p-3 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                                       title="Thanh toán đơn này"
                                     >
-                                      <CreditCard size={14} />
+                                      <CreditCard size={14} className="md:size-18" />
                                     </button>
                                   )}
-                                  <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === 'DONE' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
+                                  <div className={`px-4 py-1.5 rounded-full text-[9px] md:text-xs font-black uppercase tracking-widest shadow-sm ${order.status === 'DONE' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
                                     {order.status}
                                   </div>
                                 </div>
@@ -514,7 +514,7 @@ return (
       {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm print:hidden">
-          <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <div className="flex items-center gap-4">
@@ -557,8 +557,8 @@ return (
                     <Calendar size={20} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ngày nhập kho</p>
-                    <p className="font-bold text-slate-800 text-sm mt-0.5">{selectedOrder.date}</p>
+                    <p className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ngày nhập kho</p>
+                    <p className="font-bold text-slate-800 md:text-base text-sm mt-0.5">{selectedOrder.date}</p>
                   </div>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center gap-4">
@@ -566,8 +566,8 @@ return (
                     <Truck size={20} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nhà cung cấp</p>
-                    <p className="font-bold text-slate-800 text-sm mt-0.5">{selectedOrder.supplier}</p>
+                    <p className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nhà cung cấp</p>
+                    <p className="font-bold text-slate-800 md:text-base text-sm mt-0.5">{selectedOrder.supplier}</p>
                   </div>
                 </div>
               </div>
@@ -593,24 +593,24 @@ return (
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-y border-slate-200">
-                      <th className="p-2 md:p-3 text-[10px] md:text-sm font-bold text-slate-700 w-12 text-center">STT</th>
-                      <th className="p-2 md:p-3 text-[10px] md:text-sm font-bold text-slate-700">Tên Sản Phẩm</th>
-                      <th className="p-2 md:p-3 text-[10px] md:text-sm font-bold text-slate-700 text-center">Số Lượng</th>
-                      <th className="p-2 md:p-3 text-[10px] md:text-sm font-bold text-slate-700 text-right">Đơn Giá</th>
-                      <th className="p-2 md:p-3 text-[10px] md:text-sm font-bold text-slate-700 text-right">Thành Tiền</th>
+                      <th className="p-2 md:p-3 md:text-sm text-[10px] font-bold text-slate-700 w-12 text-center">STT</th>
+                      <th className="p-2 md:p-3 md:text-sm text-[10px] font-bold text-slate-700">Tên Sản Phẩm</th>
+                      <th className="p-2 md:p-3 md:text-sm text-[10px] font-bold text-slate-700 text-center">Số Lượng</th>
+                      <th className="p-2 md:p-3 md:text-sm text-[10px] font-bold text-slate-700 text-right">Đơn Giá</th>
+                      <th className="p-2 md:p-3 md:text-sm text-[10px] font-bold text-slate-700 text-right">Thành Tiền</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedOrder.items.map((item, idx) => (
                       <React.Fragment key={idx}>
                         <tr className="border-b border-slate-50">
-                          <td className="p-2 md:p-3 text-center text-[10px] md:text-sm text-slate-600 font-medium">{idx + 1}</td>
+                          <td className="p-2 md:p-3 text-center md:text-sm text-[10px] text-slate-600 font-medium">{idx + 1}</td>
                           <td className="p-2 md:p-3">
-                            <p className="font-medium text-[10px] md:text-sm text-slate-800">{item.name}</p>
+                            <p className="font-bold md:text-base text-[10px] md:text-sm text-slate-800">{item.name}</p>
                           </td>
-                          <td className="p-2 md:p-3 text-center text-[10px] md:text-sm text-slate-600 font-medium">{item.qty} {item.unit}</td>
-                          <td className="p-2 md:p-3 text-right text-[10px] md:text-sm text-slate-600 font-medium">{formatNumber(item.price)} <span className="underline">đ</span></td>
-                          <td className="p-2 md:p-3 text-right text-[10px] md:text-sm text-slate-800 font-bold">{formatNumber(item.qty * item.price)} <span className="underline">đ</span></td>
+                          <td className="p-2 md:p-3 text-center md:text-sm text-[10px] text-slate-600 font-medium">{item.qty} {item.unit}</td>
+                          <td className="p-2 md:p-3 text-right md:text-sm text-[10px] text-slate-600 font-medium">{formatNumber(item.price)} <span className="underline">đ</span></td>
+                          <td className="p-2 md:p-3 text-right md:text-sm text-[10px] text-slate-800 font-bold">{formatNumber(item.qty * item.price)} <span className="underline">đ</span></td>
                         </tr>
                         {item.sn && (
                           <tr className="bg-slate-50/30">
@@ -704,50 +704,50 @@ return (
       {/* Payment Modal */}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md print:hidden">
-          <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-black text-slate-800 tracking-tighter uppercase">Thanh toán công nợ</h3>
-              <button onClick={() => setIsPaymentModalOpen(false)} className="w-8 h-8 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center">
+          <div className="bg-white w-full max-w-md md:max-w-xl rounded-2xl shadow-2xl overflow-hidden p-8 md:p-10 animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Thanh toán công nợ</h3>
+              <button onClick={() => setIsPaymentModalOpen(false)} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center">
                 <X size={18} />
               </button>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-6 md:space-y-8">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Số tiền thanh toán</label>
+                <label className="md:text-sm text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block ml-1">Số tiền thanh toán</label>
                 <input 
                   type="text" 
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(formatNumber(parseFormattedNumber(e.target.value)))}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-lg font-bold outline-none focus:border-emerald-400 text-emerald-600 shadow-inner" 
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-4xl text-lg font-black outline-none focus:border-emerald-400 text-emerald-600 shadow-inner" 
                   placeholder="0" 
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Ngày thanh toán</label>
+                <label className="md:text-sm text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Ngày thanh toán</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 md:size-24" size={20} />
                   <input 
                     type="date" 
                     value={paymentDate}
                     onChange={(e) => setPaymentDate(e.target.value)}
-                    className="w-full p-3 pl-10 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-400 text-slate-700 shadow-inner" 
+                    className="w-full p-4 pl-12 bg-slate-50 border border-slate-200 rounded-xl md:text-2xl text-sm font-black outline-none focus:border-blue-400 text-slate-700 shadow-inner" 
                   />
                 </div>
               </div>
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <p className="text-[9px] text-blue-600 font-bold leading-relaxed">
+              <div className="bg-blue-50 p-4 md:p-6 rounded-xl border border-blue-100">
+                <p className="md:text-base text-[9px] text-blue-600 font-bold leading-relaxed">
                   {paymentType === 'ALL' 
                     ? "Hệ thống sẽ tự động trừ nợ cho các đơn hàng cũ nhất trước (FIFO)."
                     : "Số tiền sẽ được trừ trực tiếp vào đơn hàng đang chọn."}
                 </p>
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ví thanh toán</label>
+                <label className="block md:text-sm text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Ví thanh toán</label>
                 <select
                   value={paymentWalletId || ''}
                   onChange={e => setPaymentWalletId(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black outline-none focus:border-blue-400 text-slate-700 shadow-inner appearance-none relative"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em`, paddingRight: `2.5rem` }}
+                  className="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-xl md:text-2xl text-sm font-black outline-none focus:border-blue-400 text-slate-700 shadow-inner appearance-none relative"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 1rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `2em 2em`, paddingRight: `3rem` }}
                 >
                   <option value="" disabled>Chọn ví</option>
                   {wallets.map(w => (
@@ -757,7 +757,7 @@ return (
               </div>
               <button 
                 onClick={executePayment}
-                className="w-full bg-emerald-600 text-white py-4 rounded-lg font-black shadow-lg shadow-emerald-100 uppercase text-xs tracking-widest mt-2 active:scale-95 transition-all hover:bg-emerald-700"
+                className="w-full bg-emerald-600 text-white py-5 md:py-7 rounded-xl font-black shadow-xl shadow-emerald-100 uppercase text-xs md:text-xl tracking-widest mt-4 active:scale-95 transition-all hover:bg-emerald-700"
               >
                 XÁC NHẬN THANH TOÁN
               </button>
@@ -769,57 +769,57 @@ return (
       {/* Add Supplier Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="bg-white w-full max-w-sm md:rounded-xl rounded-none shadow-2xl overflow-hidden p-8 flex flex-col h-full md:h-auto animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex justify-between items-center mb-6 shrink-0">
-              <h3 className="text-lg font-black text-slate-800 tracking-tighter uppercase">Thêm Nhà Cung Cấp</h3>
-              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center">
-                <X size={18} />
+          <div className="bg-white w-full max-w-md md:max-w-xl md:rounded-2xl rounded-none shadow-2xl overflow-hidden p-8 md:p-12 flex flex-col h-full md:h-auto animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex justify-between items-center mb-10 shrink-0">
+              <h3 className="text-xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Thêm Nhà Cung Cấp</h3>
+              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center">
+                <X size={24} />
               </button>
             </div>
-            <div className="space-y-4 flex-1 overflow-y-auto pr-1">
+            <div className="space-y-6 md:space-y-8 flex-1 overflow-y-auto pr-1">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Tên nhà cung cấp</label>
+                <label className="md:text-sm text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Tên nhà cung cấp</label>
                 <input 
                   type="text" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-blue-400 shadow-inner" 
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-3xl text-sm font-black outline-none focus:border-blue-400 shadow-inner" 
                   placeholder="Tên nhà cung cấp..." 
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Số điện thoại</label>
+                <label className="md:text-sm text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Số điện thoại</label>
                 <input 
                   type="text" 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-blue-400 shadow-inner" 
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-3xl text-sm font-black outline-none focus:border-blue-400 shadow-inner" 
                   placeholder="Số điện thoại..." 
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Địa chỉ</label>
+                <label className="md:text-sm text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Địa chỉ</label>
                 <input 
                   type="text" 
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-blue-400 shadow-inner" 
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-2xl text-sm font-black outline-none focus:border-blue-400 shadow-inner" 
                   placeholder="Địa chỉ..." 
                 />
               </div>
             </div>
-            <div className="mt-6 flex gap-3 shrink-0">
+            <div className="mt-10 flex gap-4 shrink-0">
               <button 
                 onClick={handleSave}
-                className="flex-1 bg-emerald-600 text-white py-3.5 rounded-lg font-black shadow-md shadow-emerald-200 uppercase text-[11px] tracking-widest active:scale-95 transition-all hover:bg-emerald-700"
+                className="flex-[2] bg-emerald-600 text-white py-5 md:py-7 rounded-xl font-black shadow-xl shadow-emerald-200 uppercase text-[11px] md:text-2xl tracking-widest active:scale-95 transition-all hover:bg-emerald-700"
               >
-                LƯU
+                LƯU THÔNG TIN
               </button>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 py-3.5 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95 shadow-md shadow-red-100"
+                className="flex-1 py-5 md:py-7 bg-[#991b1b] text-white font-black rounded-xl uppercase text-[10px] md:text-lg tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95 shadow-lg shadow-red-100 md:hidden"
               >
-                Đóng
+                Hủy
               </button>
             </div>
           </div>

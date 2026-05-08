@@ -18,19 +18,10 @@ export const parseFormattedNumber = (value: any): number => {
 export const parseDateString = (dateStr: string): number => {
   if (!dateStr) return 0;
   
-  const parsed = Date.parse(dateStr);
-  if (!isNaN(parsed)) return parsed;
+  const d = smartParseDate(dateStr);
+  const time = d.getTime();
+  if (time > 0) return time;
 
-  const parts = dateStr.split(/[\s,]+/);
-  const datePart = parts.find(p => p.includes('/'));
-  const timePart = parts.find(p => p.includes(':'));
-
-  if (datePart) {
-    const [d, m, y] = datePart.split('/');
-    if (y && m && d) {
-       return new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T${timePart || '00:00:00'}`).getTime();
-    }
-  }
   return 0;
 };
 

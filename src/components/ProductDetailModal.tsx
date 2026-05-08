@@ -121,11 +121,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-4xl md:rounded-2xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+      <div className="bg-white w-full max-w-6xl md:rounded-2xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-start shrink-0">
           <div>
-            <h3 className="text-xl font-bold text-slate-800">{product.name}</h3>
-            <p className="text-sm font-medium text-blue-600 mt-1">Mã: {product.id}</p>
+            <h3 className="md:text-3xl text-2xl font-bold text-slate-800">{product.name}</h3>
+            <p className="md:text-lg text-sm font-medium text-blue-600 mt-1">Mã: {product.id}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
             <X size={24} />
@@ -137,20 +137,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
             <button 
               onClick={() => setDetailTab('info')}
-              className={`flex-1 py-2.5 text-xs font-black rounded-lg transition-all ${detailTab === 'info' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-3 md:text-base text-xs font-black rounded-lg transition-all ${detailTab === 'info' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Thông tin
             </button>
             <button 
               onClick={() => setDetailTab('stock')}
-              className={`flex-1 py-2.5 text-xs font-black rounded-lg transition-all ${detailTab === 'stock' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-3 md:text-base text-xs font-black rounded-lg transition-all ${detailTab === 'stock' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Thẻ kho
             </button>
             {product.hasSerial && (
               <button 
                 onClick={() => setDetailTab('serial')}
-                className={`flex-1 py-2.5 text-xs font-black rounded-lg transition-all ${detailTab === 'serial' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-3 md:text-base text-xs font-black rounded-lg transition-all ${detailTab === 'serial' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Danh sách Serial
               </button>
@@ -173,78 +173,78 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                 {/* Basic Info Grid */}
                 <div className="flex-1 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <div className="bg-[#f0fff4] px-4 py-3 rounded-xl border border-[#dcfce7] flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Tồn kho</span>
-                    <p className="text-xl font-black text-emerald-700 leading-none truncate">
+                  <div className="bg-[#f0fff4] px-4 py-4 rounded-xl border border-[#dcfce7] flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Tồn kho</span>
+                    <p className="md:text-4xl text-xl font-black text-emerald-700 leading-none truncate">
                       {product.isService ? '---' : product.stock}
                     </p>
                   </div>
                   
-                  <div className="bg-[#f0f7ff] px-4 py-3 rounded-xl border border-[#dbeafe] flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Giá bán</span>
-                    <p className="text-xl font-black text-blue-700 leading-none truncate">
-                      {formatNumber(product.price)}<span className="text-xs ml-0.5">đ</span>
+                  <div className="bg-[#f0f7ff] px-4 py-4 rounded-xl border border-[#dbeafe] flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Giá bán</span>
+                    <p className="md:text-4xl text-xl font-black text-blue-700 leading-none truncate">
+                      {formatNumber(product.price)}<span className="md:text-base text-xs ml-0.5">đ</span>
                     </p>
                   </div>
 
-                  <div className="bg-[#fffaf0] px-4 py-3 rounded-xl border border-[#ffedd5] flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-1">Bảo hành</span>
-                    <p className="text-sm font-black text-orange-700 leading-none truncate">
+                  <div className="bg-[#fffaf0] px-4 py-4 rounded-xl border border-[#ffedd5] flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-1">Bảo hành</span>
+                    <p className="md:text-2xl text-sm font-black text-orange-700 leading-none truncate">
                       {product.warrantyMonths ? `${product.warrantyMonths} Tháng` : '---'}
                     </p>
                   </div>
 
-                  <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-100 flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đơn vị tính</span>
-                    <p className="text-sm font-black text-slate-700 leading-none truncate">
+                  <div className="bg-slate-50 px-4 py-4 rounded-xl border border-slate-100 flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đơn vị tính</span>
+                    <p className="md:text-xl text-sm font-black text-slate-700 leading-none truncate">
                       {product.unit || '---'}
                     </p>
                   </div>
 
-                  <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-100 flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Nhóm hàng</span>
-                    <p className="text-sm font-black text-slate-700 leading-none truncate">
+                  <div className="bg-slate-50 px-4 py-4 rounded-xl border border-slate-100 flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Nhóm hàng</span>
+                    <p className="md:text-xl text-sm font-black text-slate-700 leading-none truncate">
                       {product.category || '---'}
                     </p>
                   </div>
 
-                  <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-100 flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Thương hiệu</span>
-                    <p className="text-sm font-black text-slate-700 leading-none truncate">
+                  <div className="bg-slate-50 px-4 py-4 rounded-xl border border-slate-100 flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Thương hiệu</span>
+                    <p className="md:text-xl text-sm font-black text-slate-700 leading-none truncate">
                       {product.brand || '---'}
                     </p>
                   </div>
 
-                  <div className={`px-4 py-3 rounded-xl border flex flex-col justify-center ${
+                  <div className={`px-4 py-4 rounded-xl border flex flex-col justify-center ${
                     (product.status || 'Đang kinh doanh') === 'Đang kinh doanh' ? 'bg-[#f0fdfa] border-[#ccfbf1]' : 'bg-[#fff5f5] border-[#fee2e2]'
                   }`}>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
+                    <span className={`md:text-sm text-[10px] font-bold uppercase tracking-widest mb-1 ${
                       (product.status || 'Đang kinh doanh') === 'Đang kinh doanh' ? 'text-teal-600' : 'text-rose-600'
                     }`}>Trạng thái</span>
-                    <p className={`text-sm font-black leading-none truncate ${
+                    <p className={`md:text-xl text-sm font-black leading-none truncate ${
                       (product.status || 'Đang kinh doanh') === 'Đang kinh doanh' ? 'text-teal-700' : 'text-rose-700'
                     }`}>
                       {product.status || 'Đang kinh doanh'}
                     </p>
                   </div>
 
-                  <div className="bg-[#f0fdfa] px-4 py-3 rounded-xl border border-[#ccfbf1] flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest mb-1">Tổng nhập</span>
-                    <p className="text-base font-black text-teal-700 leading-none truncate">
+                  <div className="bg-[#f0fdfa] px-4 py-4 rounded-xl border border-[#ccfbf1] flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-teal-600 uppercase tracking-widest mb-1">Tổng nhập</span>
+                    <p className="md:text-2xl text-base font-black text-teal-700 leading-none truncate">
                       {stockStats.totalIn}
                     </p>
                   </div>
 
-                  <div className="bg-[#fff5f5] px-4 py-3 rounded-xl border border-[#fee2e2] flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest mb-1">Tổng bán</span>
-                    <p className="text-base font-black text-rose-700 leading-none truncate">
+                  <div className="bg-[#fff5f5] px-4 py-4 rounded-xl border border-[#fee2e2] flex flex-col justify-center">
+                    <span className="md:text-sm text-[10px] font-bold text-rose-600 uppercase tracking-widest mb-1">Tổng bán</span>
+                    <p className="md:text-2xl text-base font-black text-rose-700 leading-none truncate">
                       {stockStats.totalOut}
                     </p>
                   </div>
 
                   <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-100 flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dự kiến hết</span>
-                    <p className="text-sm font-black text-slate-700 leading-none truncate">
+                    <span className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dự kiến hết</span>
+                    <p className="md:text-lg text-sm font-black text-slate-700 leading-none truncate">
                       {product.expectedOutOfStock || '---'}
                     </p>
                   </div>
@@ -293,14 +293,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           {h.type === 'NHAP' || h.type === 'TRA_BAN' ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-800">{h.partner}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="md:text-xl text-sm font-bold text-slate-800">{h.partner}</p>
+                          <p className="md:text-base text-xs text-slate-400 mt-0.5">
                             {h.date} | Mã: <span className="text-blue-600 font-bold hover:underline group-hover:underline">{h.refId}</span>
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold">
+                        <p className="md:text-xl text-sm font-bold">
                           <span className={h.type === 'NHAP' || h.type === 'TRA_BAN' ? 'text-green-600' : 'text-red-600'}>
                             {h.type === 'NHAP' || h.type === 'TRA_BAN' ? '+' : '-'}{h.qty}
                           </span>
@@ -361,23 +361,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           <Barcode size={20} />
                         </div>
                         <div>
-                          <p className="text-sm font-mono font-bold text-slate-700 flex items-center gap-2">
+                          <p className="md:text-xl text-sm font-mono font-bold text-slate-700 flex items-center gap-2">
                             {s.sn}
                             {s.status === 'SOLD' ? (
-                              <span className="bg-red-100 text-red-600 text-[9px] px-2 py-0.5 rounded font-medium">Đã bán</span>
+                              <span className="bg-red-100 text-red-600 md:text-sm text-[9px] px-2 py-0.5 rounded font-medium">Đã bán</span>
                             ) : (
-                              <span className="bg-green-100 text-green-600 text-[9px] px-2 py-0.5 rounded font-medium">Tồn kho</span>
+                              <span className="bg-green-100 text-green-600 md:text-sm text-[9px] px-2 py-0.5 rounded font-medium">Tồn kho</span>
                             )}
                           </p>
-                          <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                          <p className="md:text-base text-[10px] text-slate-400 mt-0.5 font-medium">
                             {s.supplier} - {s.date}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-slate-600">Vốn: {formatNumber(product.importPrice || 0)}đ</p>
+                        <p className="md:text-xl text-sm font-bold text-slate-600">Vốn: {formatNumber(product.importPrice || 0)}đ</p>
                         <div className="flex flex-col items-end gap-1 mt-1">
-                          <div className="flex items-center gap-1 text-[10px] text-slate-400 uppercase">
+                          <div className="flex items-center gap-1 md:text-sm text-[10px] text-slate-400 uppercase">
                             <span>Nhập:</span>
                             <button 
                               onClick={() => s.refId && onRefClick?.(s.refId)}
@@ -387,7 +387,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             </button>
                           </div>
                           {s.status === 'SOLD' && (
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400 uppercase">
+                            <div className="flex items-center gap-1 md:text-sm text-[10px] text-slate-400 uppercase">
                               <span>Xuất:</span>
                               {(() => {
                                 const sale = invoices.find(inv => 
@@ -419,7 +419,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
         </div>
         
-        <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50/50 shrink-0 flex gap-4">
+        <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50/50 shrink-0 flex gap-4 md:hidden">
           {onEdit && (
             <button 
               onClick={() => onEdit(product)}
@@ -430,7 +430,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           )}
           <button 
             onClick={onClose}
-            className="flex-1 py-3 bg-red-600 text-white font-black rounded-xl uppercase text-xs tracking-widest hover:bg-red-700 transition-colors shadow-lg shadow-red-100"
+            className="flex-1 py-3 bg-red-600 text-white font-black rounded-xl uppercase text-xs tracking-widest hover:bg-red-700 transition-colors shadow-lg shadow-red-100 md:hidden"
           >
             Đóng
           </button>

@@ -14,6 +14,7 @@ export const Invoices: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDebtOnly, setShowDebtOnly] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [printData, setPrintData] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -146,15 +147,19 @@ export const Invoices: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
-  const filteredInvoices = (invoices || []).filter(inv => 
-    (inv.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (inv.customer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (inv.phone || '').includes(searchTerm)
-  );
+  const filteredInvoices = (invoices || []).filter(inv => {
+    const matchesSearch = (inv.id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (inv.customer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inv.phone || '').includes(searchTerm);
+    
+    const matchesDebt = showDebtOnly ? (inv.debt > 0) : true;
+    
+    return matchesSearch && matchesDebt;
+  });
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, rowsPerPage]);
+  }, [searchTerm, rowsPerPage, showDebtOnly]);
 
   const totalPages = Math.ceil(filteredInvoices.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -168,15 +173,33 @@ return (
     <div className="flex flex-col h-full bg-slate-50 md:bg-white">
       <div className="bg-white md:rounded-xl md:shadow-sm md:border md:border-slate-200 flex flex-col mx-auto w-full h-full overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-center bg-white md:bg-slate-50/50 shrink-0">
-          <div className="relative w-full md:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-              type="text" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm mã hóa đơn, SĐT..." 
-              className="w-full bg-slate-50 md:bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-blue-500 shadow-sm font-medium transition-all"
-            />
+          <div className="relative w-full md:max-w-md flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm mã hóa đơn, SĐT..." 
+                className="w-full bg-slate-50 md:bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-blue-500 shadow-sm font-medium transition-all"
+              />
+            </div>
+            <button
+              onClick={() => setShowDebtOnly(!showDebtOnly)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-xs font-bold whitespace-nowrap ${
+                showDebtOnly 
+                ? 'bg-orange-600 border-orange-600 text-white shadow-md shadow-orange-100' 
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'
+              }`}
+            >
+              <CreditCard size={14} />
+              <span className={showDebtOnly ? 'inline' : 'hidden sm:inline'}>Đơn nợ</span>
+              {showDebtOnly && (
+                <span className="bg-white text-orange-600 px-1.5 py-0.5 rounded-full text-[10px]">
+                  {invoices.filter(i => i.debt > 0).length}
+                </span>
+              )}
+            </button>
           </div>
           <div className="hidden md:flex gap-2">
             <Link to="/pos" className="bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-lg font-bold text-xs hover:bg-blue-100 transition-colors shadow-sm flex items-center gap-2">
@@ -374,15 +397,15 @@ return (
         
         return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+          <div className="bg-white w-full max-w-5xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg">
                   <FileText size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 tracking-tighter">Chi tiết hóa đơn</h3>
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Mã: {selectedInvoice.id}</p>
+                  <h3 className="md:text-xl text-lg font-bold text-slate-800 tracking-tighter">Chi tiết hóa đơn</h3>
+                  <p className="md:text-sm text-[10px] font-bold text-blue-600 uppercase tracking-widest">Mã: {selectedInvoice.id}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -403,32 +426,32 @@ return (
                 <div className="flex items-start gap-2.5">
                   <User className="text-blue-500 shrink-0 mt-0.5" size={14} />
                   <div className="min-w-0">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Khách hàng</p>
-                    <p className="text-xs font-black text-slate-800 leading-tight truncate">{selectedInvoice.customer}</p>
+                    <p className="md:text-xs text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Khách hàng</p>
+                    <p className="md:text-base text-xs font-black text-slate-800 leading-tight truncate">{selectedInvoice.customer}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-2.5">
                   <Phone className="text-emerald-500 shrink-0 mt-0.5" size={14} />
                   <div className="min-w-0">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Số điện thoại</p>
-                    <p className="text-xs font-bold text-slate-700 leading-tight">{displayPhone || '---'}</p>
+                    <p className="md:text-xs text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Số điện thoại</p>
+                    <p className="md:text-base text-xs font-bold text-slate-700 leading-tight">{displayPhone || '---'}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-2.5 md:col-span-2">
                   <MapPin className="text-orange-500 shrink-0 mt-0.5" size={14} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Địa chỉ</p>
-                    <p className="text-xs font-bold text-slate-600 leading-tight line-clamp-1">{displayAddress || '---'}</p>
+                    <p className="md:text-xs text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Địa chỉ</p>
+                    <p className="md:text-base text-xs font-bold text-slate-600 leading-tight line-clamp-1">{displayAddress || '---'}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-2.5 md:col-span-2 pt-1 mt-1 border-t border-slate-200/50">
                   <Calendar className="text-slate-400 shrink-0 mt-0.5" size={14} />
-                  <div className="flex items-center gap-2">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Ngày lập:</p>
-                    <p className="text-xs font-bold text-slate-700 leading-none">{formatDateTime(selectedInvoice.date)}</p>
+                  <div className="min-w-0 flex-1 flex items-center gap-2">
+                    <p className="md:text-xs text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Ngày lập:</p>
+                    <p className="md:text-base text-xs font-bold text-slate-700 leading-none">{formatDateTime(selectedInvoice.date)}</p>
                   </div>
                 </div>
               </div>
@@ -436,45 +459,45 @@ return (
               <div className="border border-slate-100 rounded-lg overflow-hidden">
                 <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex items-center gap-2">
                   <Package className="text-slate-400" size={14} />
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Danh sách mặt hàng</span>
+                  <span className="md:text-sm text-[10px] font-black text-slate-500 uppercase tracking-widest">Danh sách mặt hàng</span>
                 </div>
                 {/* Desktop Table View */}
                 <div className="hidden md:block">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-slate-50">
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase">Sản phẩm</th>
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase text-center">SL</th>
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase text-right">Đơn giá</th>
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase text-right">Thành tiền</th>
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase">Sản phẩm</th>
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase text-center">SL</th>
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase text-right">Đơn giá</th>
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase text-right">Thành tiền</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {selectedInvoice.items.map((item, idx) => (
                         <tr key={idx}>
                           <td className="px-4 py-3">
-                            <p className="text-xs font-bold text-slate-800 tracking-tighter">{item.name}</p>
-                            <p className="text-[10px] text-slate-400 font-medium mb-1">{item.id}</p>
+                            <p className="md:text-base text-xs font-bold text-slate-800 tracking-tighter">{item.name}</p>
+                            <p className="md:text-xs text-[10px] text-slate-400 font-medium mb-1">{item.id}</p>
                             <div className="flex flex-wrap gap-2 mt-1">
                               {item.sn && (
                                 <div className="flex flex-wrap gap-1">
                                   {(Array.isArray(item.sn) ? item.sn : item.sn.split(',')).map((sn: string, sIdx: number) => (
-                                    <span key={sIdx} className="text-[13px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded font-mono font-bold border border-orange-100 uppercase">
+                                    <span key={sIdx} className="md:text-sm text-[13px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded font-mono font-bold border border-orange-100 uppercase">
                                       {sn.trim()}
                                     </span>
                                   ))}
                                 </div>
                               )}
                               {item.warrantyExpiry && (
-                                <span className="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-bold border border-blue-100 uppercase tracking-tight">
+                                <span className="md:text-xs text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-bold border border-blue-100 uppercase tracking-tight">
                                   BH đến: {item.warrantyExpiry}
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center text-xs font-bold text-slate-600">{item.qty}</td>
-                          <td className="px-4 py-3 text-right text-xs font-bold text-slate-600">{formatNumber(item.price)}đ</td>
-                          <td className="px-4 py-3 text-right text-xs font-bold text-slate-800">{formatNumber(item.qty * item.price)}đ</td>
+                          <td className="px-4 py-3 text-center md:text-sm text-xs font-bold text-slate-600">{item.qty}</td>
+                          <td className="px-4 py-3 text-right md:text-sm text-xs font-bold text-slate-600">{formatNumber(item.price)}đ</td>
+                          <td className="px-4 py-3 text-right md:text-sm text-xs font-bold text-slate-800">{formatNumber(item.qty * item.price)}đ</td>
                         </tr>
                       ))}
                     </tbody>
@@ -536,39 +559,41 @@ return (
 
               <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 space-y-3">
                 <div className="flex justify-between items-center text-slate-600">
-                  <span className="text-[11px] font-bold">Tổng tiền hàng</span>
-                  <span className="text-sm font-bold">{formatNumber(selectedInvoice.total + (selectedInvoice.discount || 0))}đ</span>
+                  <span className="md:text-sm text-[11px] font-bold">Tổng tiền hàng</span>
+                  <span className="md:text-base text-sm font-bold">{formatNumber(selectedInvoice.total + (selectedInvoice.discount || 0))}đ</span>
                 </div>
                 <div className="flex justify-between items-center text-red-500">
-                  <span className="text-[11px] font-bold">Giảm giá</span>
-                  <span className="text-sm font-bold">-{formatNumber(selectedInvoice.discount || 0)}đ</span>
+                  <span className="md:text-sm text-[11px] font-bold">Giảm giá</span>
+                  <span className="md:text-base text-sm font-bold">-{formatNumber(selectedInvoice.discount || 0)}đ</span>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-blue-200">
                   <div className="flex items-center gap-2">
                     <CreditCard className="text-blue-600" size={18} />
-                    <span className="text-[13px] font-bold text-blue-800">Tổng thanh toán</span>
+                    <span className="md:text-lg text-[13px] font-bold text-blue-800">Tổng thanh toán</span>
                   </div>
-                  <span className="text-2xl font-bold text-blue-600 tracking-tighter">{formatNumber(selectedInvoice.total)}đ</span>
+                  <span className="md:text-3xl text-2xl font-bold text-blue-600 tracking-tighter">{formatNumber(selectedInvoice.total)}đ</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-4 border-t border-blue-200">
                   <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-200 flex justify-between items-center">
-                    <p className="text-[9px] font-bold text-slate-500">Nợ cũ</p>
-                    <p className="text-sm font-bold text-slate-700">{formatNumber(oldDebt || 0)}đ</p>
+                    <p className="md:text-xs text-[9px] font-bold text-slate-500">Nợ cũ</p>
+                    <p className="md:text-base text-sm font-bold text-slate-700">{formatNumber(oldDebt || 0)}đ</p>
                   </div>
                   <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center">
-                    <p className="text-[9px] font-bold text-emerald-600">
-                      Đã thanh toán
+                    <div className="flex flex-col">
+                      <p className="md:text-xs text-[9px] font-bold text-emerald-600">
+                        Đã thanh toán
+                      </p>
                       {selectedInvoice.walletId && (
-                        <span className="block text-[8px] font-medium text-emerald-500 mt-0.5">
+                        <span className="md:text-[10px] block text-[8px] font-medium text-emerald-500 mt-0.5">
                           ({wallets.find(w => w.id === selectedInvoice.walletId)?.name || 'Ví đã xóa'})
                         </span>
                       )}
-                    </p>
-                    <p className="text-sm font-bold text-emerald-700">{formatNumber(selectedInvoice.paid)}đ</p>
+                    </div>
+                    <p className="md:text-base text-sm font-bold text-emerald-700">{formatNumber(selectedInvoice.paid)}đ</p>
                   </div>
                   <div className="bg-red-50/50 p-3 rounded-xl border border-red-100 flex justify-between items-center">
-                    <p className="text-[9px] font-bold text-red-600">Nợ hiện tại</p>
-                    <p className="text-sm font-bold text-red-700">{formatNumber((oldDebt || 0) + selectedInvoice.debt)}đ</p>
+                    <p className="md:text-xs text-[9px] font-bold text-red-600">Nợ hiện tại</p>
+                    <p className="md:text-base text-sm font-bold text-red-700">{formatNumber((oldDebt || 0) + selectedInvoice.debt)}đ</p>
                   </div>
                 </div>
               </div>
@@ -581,30 +606,30 @@ return (
                       setPaymentAmount(selectedInvoice.debt.toString());
                       setIsPaymentModalOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white font-bold rounded-xl text-[13px] shadow-lg shadow-emerald-100 active:scale-95"
+                    className="flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white font-bold rounded-xl md:text-base text-[13px] shadow-lg shadow-emerald-100 active:scale-95"
                   >
                     <Wallet size={16} /> Trả nợ
                   </button>
                 )}
                 <button 
                   onClick={() => navigate('/create-return-sales', { state: { preFillInvoice: selectedInvoice } })}
-                  className="flex items-center justify-center gap-2 py-3 bg-orange-50 border border-orange-200 text-orange-600 font-bold rounded-xl text-[13px] active:scale-95 hover:bg-orange-100"
+                  className="flex items-center justify-center gap-2 py-3 bg-orange-50 border border-orange-200 text-orange-600 font-bold rounded-xl md:text-base text-[13px] active:scale-95 hover:bg-orange-100"
                 >
                   <RotateCcw size={16} /> Trả hàng
                 </button>
                 <button 
                   onClick={() => navigate('/pos', { state: { editInvoice: selectedInvoice } })}
-                  className="flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 text-blue-600 font-bold rounded-xl text-[13px] active:scale-95 hover:bg-blue-100 shadow-sm"
+                  className="flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 text-blue-600 font-bold rounded-xl md:text-base text-[13px] active:scale-95 hover:bg-blue-100 shadow-sm"
                 >
                   <Edit3 size={16} /> Sửa
                 </button>
               </div>
             </div>
 
-            <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 space-y-3 shrink-0">
+            <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 space-y-3 shrink-0 md:hidden">
               <button 
                 onClick={() => setSelectedInvoice(null)}
-                className="w-full py-3 bg-[#991b1b] text-white font-bold rounded-xl text-[13px] hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100 active:scale-95"
+                className="w-full py-3 bg-[#991b1b] text-white font-bold rounded-xl md:text-base text-[13px] hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100 active:scale-95"
               >
                 Đóng
               </button>
@@ -624,8 +649,8 @@ return (
                   <CreditCard size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">Thanh toán hóa đơn</h2>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">{selectedInvoice.id}</p>
+                  <h2 className="md:text-xl text-lg font-bold text-slate-800">Thanh toán hóa đơn</h2>
+                  <p className="md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">{selectedInvoice.id}</p>
                 </div>
               </div>
               <button 
@@ -637,17 +662,17 @@ return (
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Số tiền còn nợ</label>
-                <div className="text-2xl font-bold text-red-600">{formatNumber(selectedInvoice.debt)}đ</div>
+                <label className="block md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Số tiền còn nợ</label>
+                <div className="md:text-3xl text-2xl font-bold text-red-600">{formatNumber(selectedInvoice.debt)}đ</div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Số tiền thanh toán</label>
+                <label className="block md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Số tiền thanh toán</label>
                 <div className="relative">
                   <input
                     type="text"
                     value={paymentAmount ? formatNumber(Number(paymentAmount.replace(/[^0-9]/g, ''))) : ''}
                     onChange={(e) => setPaymentAmount(e.target.value.replace(/[^0-9]/g, ''))}
-                    className="w-full pl-4 pr-12 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 text-lg transition-colors"
+                    className="w-full pl-4 pr-12 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 md:text-2xl text-lg transition-colors"
                     placeholder="Nhập số tiền..."
                     autoFocus
                   />
@@ -655,11 +680,11 @@ return (
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ví thanh toán</label>
+                <label className="block md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ví thanh toán</label>
                 <select
                   value={paymentWalletId || ''}
                   onChange={e => setPaymentWalletId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 text-sm transition-colors cursor-pointer appearance-none"
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 md:text-base text-sm transition-colors cursor-pointer appearance-none"
                   style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em`, paddingRight: `2.5rem` }}
                 >
                   <option value="" disabled>Chọn ví</option>
@@ -672,14 +697,14 @@ return (
             <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
               <button
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="flex-1 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold uppercase text-sm tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+                className="flex-1 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold uppercase md:text-base text-sm tracking-widest hover:bg-slate-50 transition-all active:scale-95"
               >
                 Hủy
               </button>
               <button
                 onClick={handlePayment}
                 disabled={isProcessingPayment || !paymentAmount || Number(paymentAmount.replace(/[^0-9]/g, '')) <= 0}
-                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-sm tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase md:text-base text-sm tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessingPayment ? 'Đang xử lý...' : 'Xác nhận'}
               </button>

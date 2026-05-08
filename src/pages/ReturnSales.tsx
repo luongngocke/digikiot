@@ -202,15 +202,15 @@ export const ReturnSales: React.FC = () => {
       {/* Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+          <div className="bg-white w-full max-w-5xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg">
                   <RotateCcw size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-800 tracking-tighter uppercase">Chi tiết trả hàng bán</h3>
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Mã: {selectedOrder.id}</p>
+                  <h3 className="md:text-xl text-lg font-black text-slate-800 tracking-tighter uppercase">Chi tiết trả hàng bán</h3>
+                  <p className="md:text-xs text-[10px] font-bold text-blue-600 uppercase tracking-widest">Mã: {selectedOrder.id}</p>
                 </div>
               </div>
               <button onClick={() => setSelectedOrder(null)} className="w-8 h-8 bg-white text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center shadow-sm border border-slate-100">
@@ -222,15 +222,15 @@ export const ReturnSales: React.FC = () => {
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex items-center gap-3">
                   <Calendar className="text-slate-400" size={18} />
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ngày trả hàng</p>
-                    <p className="text-xs font-black text-slate-800">{selectedOrder.date}</p>
+                    <p className="md:text-xs text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ngày trả hàng</p>
+                    <p className="md:text-sm text-xs font-black text-slate-800">{selectedOrder.date}</p>
                   </div>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex items-center gap-3">
                   <User className="text-slate-400" size={18} />
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Khách hàng</p>
-                    <p className="text-xs font-black text-slate-800 uppercase">{selectedOrder.customer}</p>
+                    <p className="md:text-xs text-[9px] font-bold text-slate-400 uppercase tracking-widest">Khách hàng</p>
+                    <p className="md:text-sm text-xs font-black text-slate-800 uppercase">{selectedOrder.customer}</p>
                   </div>
                 </div>
               </div>
@@ -238,20 +238,20 @@ export const ReturnSales: React.FC = () => {
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase">Sản phẩm</th>
-                      <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase text-center">SL</th>
-                      <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase text-right">Giá trả</th>
+                      <th className="px-4 py-3 md:text-sm text-[9px] font-black text-slate-400 uppercase">Sản phẩm</th>
+                      <th className="px-4 py-3 md:text-sm text-[9px] font-black text-slate-400 uppercase text-center">SL</th>
+                      <th className="px-4 py-3 md:text-sm text-[9px] font-black text-slate-400 uppercase text-right">Giá trả</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {selectedOrder.items.map((item, idx) => (
                       <tr key={idx}>
                         <td className="px-4 py-3">
-                          <p className="text-xs font-black text-slate-800 uppercase tracking-tighter">{item.name}</p>
-                          {item.sn && <p className="text-[8px] text-orange-500 font-bold mt-0.5 font-mono uppercase">SN: {Array.isArray(item.sn) ? item.sn.join(', ') : item.sn}</p>}
+                          <p className="md:text-base text-xs font-black text-slate-800 uppercase tracking-tighter">{item.name}</p>
+                          {item.sn && <p className="md:text-xs text-[8px] text-orange-500 font-bold mt-0.5 font-mono uppercase">SN: {Array.isArray(item.sn) ? item.sn.join(', ') : item.sn}</p>}
                         </td>
-                        <td className="px-4 py-3 text-center text-xs font-black text-slate-600">{item.qty}</td>
-                        <td className="px-4 py-3 text-right text-xs font-black text-slate-800">{formatNumber(item.price)}đ</td>
+                        <td className="px-4 py-3 text-center md:text-base text-xs font-black text-slate-600">{item.qty}</td>
+                        <td className="px-4 py-3 text-right md:text-base text-xs font-black text-slate-800">{formatNumber(item.price)}đ</td>
                       </tr>
                     ))}
                   </tbody>
@@ -259,24 +259,24 @@ export const ReturnSales: React.FC = () => {
               </div>
               <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tổng tiền hàng</span>
-                  <span className="text-sm font-bold text-slate-800">{formatNumber(selectedOrder.totalGoods)}đ</span>
+                  <span className="md:text-base text-xs font-bold text-slate-500 uppercase tracking-widest">Tổng tiền hàng</span>
+                  <span className="md:text-lg text-sm font-bold text-slate-800">{formatNumber(selectedOrder.totalGoods)}đ</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Giảm giá</span>
-                  <span className="text-sm font-bold text-slate-800">{formatNumber(selectedOrder.discount)}đ</span>
+                  <span className="md:text-base text-xs font-bold text-slate-500 uppercase tracking-widest">Giảm giá</span>
+                  <span className="md:text-lg text-sm font-bold text-slate-800">{formatNumber(selectedOrder.discount)}đ</span>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-blue-200">
-                  <span className="text-sm font-black text-blue-800 uppercase tracking-widest">Cần trả khách</span>
-                  <span className="text-2xl font-black text-blue-600 tracking-tighter">{formatNumber(selectedOrder.total)}đ</span>
+                  <span className="md:text-lg text-sm font-black text-blue-800 uppercase tracking-widest">Cần trả khách</span>
+                  <span className="md:text-3xl text-2xl font-black text-blue-600 tracking-tighter">{formatNumber(selectedOrder.total)}đ</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-black text-emerald-800 uppercase tracking-widest">Đã trả khách</span>
-                  <span className="text-xl font-black text-emerald-600 tracking-tighter">{formatNumber(selectedOrder.paid)}đ</span>
+                  <span className="md:text-lg text-sm font-black text-emerald-800 uppercase tracking-widest">Đã trả khách</span>
+                  <span className="md:text-2xl text-xl font-black text-emerald-600 tracking-tighter">{formatNumber(selectedOrder.paid)}đ</span>
                 </div>
               </div>
             </div>
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3 md:hidden">
               <button className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 font-black rounded-lg uppercase text-[10px] tracking-widest shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
                 <Printer size={16} /> In phiếu
               </button>

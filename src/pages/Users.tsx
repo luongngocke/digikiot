@@ -319,7 +319,7 @@ const Users: React.FC = () => {
               </button>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 py-3 bg-[#991b1b] text-white font-black rounded-lg hover:bg-[#7f1d1d] transition-all shadow-md uppercase text-[10px] tracking-widest active:scale-95"
+                className="flex-1 py-3 bg-[#991b1b] text-white font-black rounded-lg hover:bg-[#7f1d1d] transition-all shadow-md uppercase text-[10px] tracking-widest active:scale-95 md:hidden"
               >
                 Đóng
               </button>

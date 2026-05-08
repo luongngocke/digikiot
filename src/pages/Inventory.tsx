@@ -593,18 +593,21 @@ return (
       {/* Invoice Detail Modal (Shared) */}
       {viewingInvoice && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+          <div className="bg-white w-full max-w-5xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg">
                   <FileText size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-800 tracking-tighter uppercase">Chi tiết hóa đơn</h3>
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Mã: {viewingInvoice.id}</p>
+                  <h3 className="md:text-2xl text-lg font-black text-slate-800 tracking-tighter uppercase">Chi tiết hóa đơn</h3>
+                  <p className="md:text-sm text-[10px] font-bold text-blue-600 uppercase tracking-widest">Mã: {viewingInvoice.id}</p>
                 </div>
               </div>
-              <button onClick={() => setViewingInvoice(null)} className="w-8 h-8 bg-white text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center shadow-sm border border-slate-100">
+              <button 
+                onClick={() => setViewingInvoice(null)} 
+                className="w-8 h-8 bg-white text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center shadow-sm border border-slate-100"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -613,15 +616,15 @@ return (
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex items-center gap-3">
                   <Calendar className="text-slate-400" size={18} />
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ngày lập phiếu</p>
-                    <p className="text-xs font-black text-slate-800">{viewingInvoice.date}</p>
+                    <p className="md:text-sm text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ngày lập phiếu</p>
+                    <p className="md:text-lg text-xs font-black text-slate-800">{viewingInvoice.date}</p>
                   </div>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex items-center gap-3">
                   <User className="text-slate-400" size={18} />
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Khách hàng</p>
-                    <p className="text-xs font-black text-slate-800 uppercase">{viewingInvoice.customer}</p>
+                    <p className="md:text-sm text-[9px] font-bold text-slate-400 uppercase tracking-widest">Khách hàng</p>
+                    <p className="md:text-lg text-xs font-black text-slate-800 uppercase">{viewingInvoice.customer}</p>
                   </div>
                 </div>
               </div>
@@ -629,20 +632,20 @@ return (
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase">Sản phẩm</th>
-                      <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase text-center">SL</th>
-                      <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase text-right">Thành tiền</th>
+                      <th className="px-4 py-3 md:text-sm text-[9px] font-black text-slate-400 uppercase">Sản phẩm</th>
+                      <th className="px-4 py-3 md:text-sm text-[9px] font-black text-slate-400 uppercase text-center">SL</th>
+                      <th className="px-4 py-3 md:text-sm text-[9px] font-black text-slate-400 uppercase text-right">Thành tiền</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {viewingInvoice.items.map((item, idx) => (
                       <tr key={idx}>
                         <td className="px-4 py-3">
-                          <p className="text-xs font-black text-slate-800 uppercase tracking-tighter">{item.name}</p>
-                          {item.sn && <p className="text-[8px] text-orange-500 font-bold mt-0.5 font-mono uppercase">SN: {item.sn}</p>}
+                          <p className="md:text-lg text-xs font-black text-slate-800 uppercase tracking-tighter">{item.name}</p>
+                          {item.sn && <p className="md:text-xs text-[8px] text-orange-500 font-bold mt-0.5 font-mono uppercase">SN: {item.sn}</p>}
                         </td>
-                        <td className="px-4 py-3 text-center text-xs font-black text-slate-600">{item.qty}</td>
-                        <td className="px-4 py-3 text-right text-xs font-black text-slate-800">{formatNumber(item.qty * (item.price || 0))}đ</td>
+                        <td className="px-4 py-3 text-center md:text-lg text-xs font-black text-slate-600">{item.qty}</td>
+                        <td className="px-4 py-3 text-right md:text-lg text-xs font-black text-slate-800">{formatNumber(item.qty * (item.price || 0))}đ</td>
                       </tr>
                     ))}
                   </tbody>
@@ -650,13 +653,18 @@ return (
               </div>
               <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100">
                 <div className="flex justify-between items-center pt-3 border-t border-blue-200">
-                  <span className="text-sm font-black text-blue-800 uppercase tracking-widest">Tổng thanh toán</span>
-                  <span className="text-2xl font-black text-blue-600 tracking-tighter">{formatNumber(viewingInvoice.total || 0)}đ</span>
+                  <span className="md:text-lg text-sm font-black text-blue-800 uppercase tracking-widest">Tổng thanh toán</span>
+                  <span className="md:text-4xl text-2xl font-black text-blue-600 tracking-tighter">{formatNumber(viewingInvoice.total || 0)}đ</span>
                 </div>
               </div>
             </div>
             <div className="p-6 border-t border-slate-100 bg-slate-50/50">
-              <button onClick={() => setViewingInvoice(null)} className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors">Đóng</button>
+              <button 
+                onClick={() => setViewingInvoice(null)} 
+                className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase md:text-sm text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors md:hidden"
+              >
+                Đóng
+              </button>
             </div>
           </div>
         </div>
@@ -665,21 +673,24 @@ return (
       {/* Import Detail Modal (Shared) */}
       {viewingImport && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+          <div className="bg-white w-full max-w-5xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
             {/* Header */}
             <div className="p-6 border-b border-slate-100 flex justify-between items-start shrink-0">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Chi Tiết Nhập Kho</h3>
+                <h3 className="md:text-3xl text-xl font-bold text-slate-800">Chi Tiết Nhập Kho</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-medium text-slate-500">{viewingImport.id}</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                  <span className="md:text-lg text-sm font-medium text-slate-500">{viewingImport.id}</span>
+                  <span className={`md:text-sm text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                     viewingImport.status === 'DONE' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                   }`}>
                     {viewingImport.status === 'DONE' ? 'Hoàn thành' : 'Phiếu tạm'}
                   </span>
                 </div>
               </div>
-              <button onClick={() => setViewingImport(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <button 
+                onClick={() => setViewingImport(null)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -687,8 +698,8 @@ return (
             <div className="p-6 overflow-y-auto flex-1 space-y-4">
               {/* Supplier & Date Box */}
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex justify-between items-center">
-                <span className="font-bold text-slate-700 uppercase">{viewingImport.supplier}</span>
-                <span className="text-xs text-slate-500">{viewingImport.date}</span>
+                <span className="md:text-xl font-bold text-slate-700 uppercase">{viewingImport.supplier}</span>
+                <span className="md:text-base text-xs text-slate-500">{viewingImport.date}</span>
               </div>
 
               {/* Items List */}
@@ -696,17 +707,17 @@ return (
                 {viewingImport.items.map((item, idx) => (
                   <div key={idx} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 relative">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-sm font-bold text-slate-800 uppercase">{item.name}</h4>
-                      <span className="text-blue-600 font-bold">{formatNumber(item.price * item.qty)}đ</span>
+                      <h4 className="md:text-lg text-sm font-bold text-slate-800 uppercase">{item.name}</h4>
+                      <span className="md:text-xl text-blue-600 font-bold">{formatNumber(item.price * item.qty)}đ</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500 font-medium">SL: {item.qty}</span>
-                      <span className="text-xs text-slate-400">Giá: {formatNumber(item.price)}đ</span>
+                      <span className="md:text-base text-xs text-slate-500 font-medium">SL: {item.qty}</span>
+                      <span className="md:text-base text-xs text-slate-400">Giá: {formatNumber(item.price)}đ</span>
                     </div>
                     {item.sn && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {(typeof item.sn === 'string' ? item.sn.split(',') : item.sn).map((sn: string, sIdx: number) => (
-                          <span key={`${sn}-${sIdx}`} className="bg-orange-50 text-orange-600 text-[10px] font-bold px-2 py-1 rounded border border-orange-100">
+                          <span key={`${sn}-${sIdx}`} className="bg-orange-50 text-orange-600 md:text-sm text-[10px] font-bold px-2 py-1 rounded border border-orange-100">
                             {sn.trim()}
                           </span>
                         ))}
@@ -719,11 +730,11 @@ return (
               {/* Summary Section */}
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex justify-between items-end">
-                  <span className="text-sm font-bold text-slate-500 mb-1">Vốn nhập:</span>
+                  <span className="md:text-lg text-sm font-bold text-slate-500 mb-1">Vốn nhập:</span>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-600">{formatNumber(viewingImport.total || 0)}đ</p>
+                    <p className="md:text-4xl text-2xl font-bold text-blue-600">{formatNumber(viewingImport.total || 0)}đ</p>
                     {viewingImport.debt > 0 && (
-                      <p className="text-xs font-bold text-red-500 mt-1">Nợ NCC: {formatNumber(viewingImport.debt)}đ</p>
+                      <p className="md:text-lg text-xs font-bold text-red-500 mt-1">Nợ NCC: {formatNumber(viewingImport.debt)}đ</p>
                     )}
                   </div>
                 </div>
@@ -732,21 +743,21 @@ return (
 
             {/* Footer Actions */}
             <div className="p-6 border-t border-slate-100 grid grid-cols-3 md:grid-cols-4 gap-3 bg-slate-50/50 shrink-0">
-              <button className="flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors">
+              <button className="flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-lg text-slate-600 font-bold md:text-base text-sm hover:bg-slate-50 transition-colors">
                 <RotateCcw size={18} /> Trả hàng
               </button>
               <button 
                 onClick={() => handleOpenImport(viewingImport)}
-                className="flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-lg text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+                className="flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-lg text-slate-600 font-bold md:text-base text-sm hover:bg-slate-50 transition-colors"
               >
                 <ExternalLink size={18} /> Mở phiếu
               </button>
-              <button className="flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors shadow-md">
+              <button className="flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-lg font-bold md:text-base text-sm hover:bg-blue-700 transition-colors shadow-md">
                 <Printer size={18} /> In phiếu
               </button>
               <button 
                 onClick={() => setViewingImport(null)}
-                className="col-span-3 md:col-span-1 py-2.5 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] shadow-lg shadow-red-100"
+                className="col-span-3 md:col-span-1 py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase md:text-sm text-[10px] tracking-widest hover:bg-[#7f1d1d] shadow-lg shadow-red-100 md:hidden"
               >
                 Đóng
               </button>
@@ -758,38 +769,41 @@ return (
       {/* Return Import Detail Modal */}
       {viewingReturnImport && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+          <div className="bg-white w-full max-w-5xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-start shrink-0">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Chi Tiết Trả Hàng Nhập</h3>
+                <h3 className="md:text-3xl text-xl font-bold text-slate-800">Chi Tiết Trả Hàng Nhập</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-medium text-slate-500">{viewingReturnImport.id}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-red-100 text-red-700">
+                  <span className="md:text-lg text-sm font-medium text-slate-500">{viewingReturnImport.id}</span>
+                  <span className="md:text-sm text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-red-100 text-red-700">
                     {viewingReturnImport.status === 'DONE' ? 'Hoàn thành' : 'Phiếu tạm'}
                   </span>
                 </div>
               </div>
-              <button onClick={() => setViewingReturnImport(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <button 
+                onClick={() => setViewingReturnImport(null)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
                 <X size={24} />
               </button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1 space-y-4">
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex justify-between items-center">
-                <span className="font-bold text-slate-700 uppercase">{viewingReturnImport.supplier}</span>
-                <span className="text-xs text-slate-500">{viewingReturnImport.date}</span>
+                <span className="md:text-xl font-bold text-slate-700 uppercase">{viewingReturnImport.supplier}</span>
+                <span className="md:text-base text-xs text-slate-500">{viewingReturnImport.date}</span>
               </div>
 
               <div className="space-y-3">
                 {viewingReturnImport.items.map((item, idx) => (
                   <div key={idx} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-sm font-bold text-slate-800 uppercase">{item.name}</h4>
-                      <span className="text-red-600 font-bold">{formatNumber(item.price * item.qty)}đ</span>
+                      <h4 className="md:text-lg text-sm font-bold text-slate-800 uppercase">{item.name}</h4>
+                      <span className="md:text-xl text-red-600 font-bold">{formatNumber(item.price * item.qty)}đ</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500 font-medium">SL: {item.qty}</span>
-                      <span className="text-xs text-slate-400">Giá: {formatNumber(item.price)}đ</span>
+                      <span className="md:text-base text-xs text-slate-500 font-medium">SL: {item.qty}</span>
+                      <span className="md:text-base text-xs text-slate-400">Giá: {formatNumber(item.price)}đ</span>
                     </div>
                   </div>
                 ))}
@@ -797,10 +811,10 @@ return (
 
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex justify-between items-end">
-                  <span className="text-sm font-bold text-slate-500 mb-1">Tổng tiền trả:</span>
+                  <span className="md:text-lg text-sm font-bold text-slate-500 mb-1">Tổng tiền trả:</span>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-red-600">{formatNumber(viewingReturnImport.total)}đ</p>
-                    <p className="text-xs font-bold text-slate-500 mt-1">Đã nhận: {formatNumber(viewingReturnImport.received)}đ</p>
+                    <p className="md:text-4xl text-2xl font-bold text-red-600">{formatNumber(viewingReturnImport.total)}đ</p>
+                    <p className="md:text-lg text-xs font-bold text-slate-500 mt-1">Đã nhận: {formatNumber(viewingReturnImport.received)}đ</p>
                   </div>
                 </div>
               </div>
@@ -809,7 +823,7 @@ return (
             <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50/50 shrink-0">
               <button 
                 onClick={() => setViewingReturnImport(null)}
-                className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100"
+                className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase md:text-sm text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100 md:hidden"
               >
                 Đóng
               </button>
@@ -821,43 +835,46 @@ return (
       {/* Return Sales Detail Modal */}
       {viewingReturnSales && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
+          <div className="bg-white w-full max-w-5xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:h-auto md:max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-start shrink-0">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Chi Tiết Khách Trả Hàng</h3>
+                <h3 className="md:text-3xl text-xl font-bold text-slate-800">Chi Tiết Khách Trả Hàng</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-medium text-slate-500">{viewingReturnSales.id}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-orange-100 text-orange-700">
+                  <span className="md:text-lg text-sm font-medium text-slate-500">{viewingReturnSales.id}</span>
+                  <span className="md:text-sm text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-orange-100 text-orange-700">
                     {viewingReturnSales.status === 'DONE' ? 'Hoàn thành' : 'Phiếu tạm'}
                   </span>
                 </div>
               </div>
-              <button onClick={() => setViewingReturnSales(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <button 
+                onClick={() => setViewingReturnSales(null)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
                 <X size={24} />
               </button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1 space-y-4">
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex justify-between items-center">
-                <span className="font-bold text-slate-700 uppercase">{viewingReturnSales.customer}</span>
-                <span className="text-xs text-slate-500">{viewingReturnSales.date}</span>
+                <span className="md:text-xl font-bold text-slate-700 uppercase">{viewingReturnSales.customer}</span>
+                <span className="md:text-base text-xs text-slate-500">{viewingReturnSales.date}</span>
               </div>
 
               <div className="space-y-3">
                 {viewingReturnSales.items.map((item, idx) => (
                   <div key={idx} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-sm font-bold text-slate-800 uppercase">{item.name}</h4>
-                      <span className="text-orange-600 font-bold">{formatNumber(item.price * item.qty)}đ</span>
+                      <h4 className="md:text-lg text-sm font-bold text-slate-800 uppercase">{item.name}</h4>
+                      <span className="md:text-xl text-orange-600 font-bold">{formatNumber(item.price * item.qty)}đ</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500 font-medium">SL: {item.qty}</span>
-                      <span className="text-xs text-slate-400">Giá: {formatNumber(item.price)}đ</span>
+                      <span className="md:text-base text-xs text-slate-500 font-medium">SL: {item.qty}</span>
+                      <span className="md:text-base text-xs text-slate-400">Giá: {formatNumber(item.price)}đ</span>
                     </div>
                     {item.sn && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {(typeof item.sn === 'string' ? item.sn.split(',') : item.sn).map((sn: string, sIdx: number) => (
-                          <span key={sIdx} className="text-[8px] bg-white border border-slate-200 px-1 rounded text-slate-500 font-mono">
+                          <span key={sIdx} className="md:text-sm text-[8px] bg-white border border-slate-200 px-1 rounded text-slate-500 font-mono">
                             {sn.trim()}
                           </span>
                         ))}
@@ -869,10 +886,10 @@ return (
 
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex justify-between items-end">
-                  <span className="text-sm font-bold text-slate-500 mb-1">Tổng tiền trả khách:</span>
+                  <span className="md:text-lg text-sm font-bold text-slate-500 mb-1">Tổng tiền trả khách:</span>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-orange-600">{formatNumber(viewingReturnSales.total)}đ</p>
-                    <p className="text-xs font-bold text-slate-500 mt-1">Đã trả: {formatNumber(viewingReturnSales.paid)}đ</p>
+                    <p className="md:text-4xl text-2xl font-bold text-orange-600">{formatNumber(viewingReturnSales.total)}đ</p>
+                    <p className="md:text-lg text-xs font-bold text-slate-500 mt-1">Đã trả: {formatNumber(viewingReturnSales.paid)}đ</p>
                   </div>
                 </div>
               </div>
@@ -881,7 +898,7 @@ return (
             <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50/50 shrink-0">
               <button 
                 onClick={() => setViewingReturnSales(null)}
-                className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100"
+                className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase md:text-sm text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100 md:hidden"
               >
                 Đóng
               </button>
@@ -893,10 +910,13 @@ return (
       {/* Add Product Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-0 md:p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-4xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:max-h-[95vh]">
+          <div className="bg-white w-full max-w-6xl md:rounded-xl rounded-none shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col h-full md:max-h-[95vh]">
             <div className="flex justify-between items-center p-4 border-b border-slate-100 shrink-0">
-              <h3 className="text-lg font-bold text-slate-800 tracking-tight">{selectedProduct ? 'Cập nhật mặt hàng' : 'Thêm mặt hàng'}</h3>
-              <button onClick={handleCloseModal} className="w-8 h-8 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center">
+              <h3 className="md:text-2xl text-lg font-bold text-slate-800 tracking-tight">{selectedProduct ? 'Cập nhật mặt hàng' : 'Thêm mặt hàng'}</h3>
+              <button 
+                onClick={handleCloseModal} 
+                className="w-8 h-8 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-200 transition-colors flex items-center justify-center"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -920,7 +940,7 @@ return (
                   )}
                 </div>
                 <div className="flex-1 space-y-3">
-                  <p className="text-xs font-medium text-slate-500">Link ảnh sản phẩm</p>
+                  <p className="md:text-sm text-xs font-medium text-slate-500">Link ảnh sản phẩm</p>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <div className="relative flex-1">
                       <input 
@@ -928,31 +948,31 @@ return (
                         value={image || ''}
                         onChange={(e) => setImage(e.target.value)}
                         placeholder="Dán link ảnh tại đây..."
-                        className="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-400 shadow-sm"
+                        className="w-full pl-8 pr-3 py-3 bg-white border border-slate-200 rounded-lg md:text-base text-xs outline-none focus:border-blue-400 shadow-sm"
                       />
-                      <ExternalLink size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
+                      <ExternalLink size={14} className="absolute left-2.5 top-3.5 text-slate-400" />
                     </div>
                     <button 
                       onClick={() => setIsLibraryOpen(true)}
-                      className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                      className="px-4 py-3 bg-slate-900 text-white rounded-lg md:text-sm text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
                     >
                       <ImageIcon size={14} /> Chọn ảnh
                     </button>
                   </div>
-                  <p className="text-[10px] text-slate-400 italic">Nhập địa chỉ URL hoặc chọn ảnh từ thư viện Drive.</p>
+                  <p className="md:text-xs text-[10px] text-slate-400 italic">Nhập địa chỉ URL hoặc chọn ảnh từ thư viện Drive.</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 bg-slate-200/50 p-1.5 rounded-xl w-full shrink-0">
                 <button 
                   onClick={() => setPType('product')}
-                  className={`flex-1 text-center py-2 rounded-lg transition-all font-bold text-sm ${pType === 'product' ? 'bg-blue-600 shadow-md text-white' : 'text-slate-500 hover:bg-slate-200'}`}
+                  className={`flex-1 text-center py-3 rounded-lg transition-all font-bold md:text-base text-sm ${pType === 'product' ? 'bg-blue-600 shadow-md text-white' : 'text-slate-500 hover:bg-slate-200'}`}
                 >
                   Hàng hóa
                 </button>
                 <button 
                   onClick={() => setPType('service')}
-                  className={`flex-1 text-center py-2 rounded-lg transition-all font-bold text-sm ${pType === 'service' ? 'bg-emerald-600 shadow-md text-white' : 'text-slate-500 hover:bg-slate-200'}`}
+                  className={`flex-1 text-center py-3 rounded-lg transition-all font-bold md:text-base text-sm ${pType === 'service' ? 'bg-emerald-600 shadow-md text-white' : 'text-slate-500 hover:bg-slate-200'}`}
                 >
                   Dịch vụ
                 </button>
@@ -960,35 +980,35 @@ return (
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="text-xs font-medium text-slate-500 ml-1">Tên hàng / dịch vụ</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Tên hàng / dịch vụ</label>
                   <input 
                     type="text" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                     placeholder="VD: SSD SAMSUNG 1TB..." 
                   />
                 </div>
                 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Giá bán lẻ (đ)</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Giá bán lẻ (đ)</label>
                   <NumericFormat 
                     value={price}
                     onValueChange={(values) => setPrice(values.value)}
                     thousandSeparator="."
                     decimalSeparator=","
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold text-blue-600" 
                     placeholder="0" 
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Giá vốn (đ)</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1 text-blue-600">Giá vốn (đ)</label>
                   <NumericFormat 
                     value={cost}
                     onValueChange={(values) => setCost(values.value)}
                     thousandSeparator="."
                     decimalSeparator=","
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-blue-600 outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-xl text-sm text-blue-600 outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                     placeholder="0" 
                   />
                 </div>
@@ -996,61 +1016,61 @@ return (
                 {pType === 'product' && (
                   <>
                     <div>
-                      <label className="text-xs font-medium text-slate-500 ml-1">Tồn hàng ban đầu</label>
+                      <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Tồn hàng ban đầu</label>
                       <input 
                         type="number" 
                         value={stock}
                         onChange={(e) => setStock(e.target.value)}
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                         placeholder="0" 
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-sm mt-1">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-sm mt-1">
                       <div>
-                        <p className="text-xs font-medium text-slate-700">Quản lý Serial / IMEI</p>
-                        <p className="text-[10px] text-slate-400">Dùng cho sản phẩm có mã riêng</p>
+                        <p className="md:text-base text-xs font-bold text-slate-700">Quản lý Serial / IMEI</p>
+                        <p className="md:text-sm text-[10px] text-slate-400">Dùng cho sản phẩm có mã riêng</p>
                       </div>
                       <button 
                         onClick={() => setHasSerial(!hasSerial)}
-                        className={`w-10 h-5 rounded-full transition-colors relative ${hasSerial ? 'bg-blue-600' : 'bg-slate-300'}`}
+                        className={`w-12 h-6 rounded-full transition-colors relative ${hasSerial ? 'bg-blue-600' : 'bg-slate-300'}`}
                       >
-                        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${hasSerial ? 'left-6' : 'left-1'}`} />
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${hasSerial ? 'left-7' : 'left-1'}`} />
                       </button>
                     </div>
                   </>
                 )}
 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Thời gian bảo hành (tháng)</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Thời gian bảo hành (tháng)</label>
                   <input 
                     type="number" 
                     value={warrantyMonths}
                     onChange={(e) => setWarrantyMonths(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                     placeholder="0" 
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Đơn vị tính</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Đơn vị tính</label>
                   <input 
                     type="text" 
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                     placeholder="Cái, Bộ..." 
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Nhóm hàng</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Nhóm hàng</label>
                   <input 
                     type="text" 
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     list="category-suggestions"
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                     placeholder="Linh kiện..." 
                   />
                   <datalist id="category-suggestions">
@@ -1059,13 +1079,13 @@ return (
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Thương hiệu</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Thương hiệu</label>
                   <input 
                     type="text" 
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
                     list="brand-suggestions"
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                     placeholder="Samsung, Dell..." 
                   />
                   <datalist id="brand-suggestions">
@@ -1074,32 +1094,32 @@ return (
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Dự kiến hết hàng</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Dự kiến hết hàng</label>
                   <input 
                     type="date" 
                     value={expectedOutOfStock}
                     onChange={(e) => setExpectedOutOfStock(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Cảnh báo tồn kho thấp</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1">Cảnh báo tồn kho thấp</label>
                   <input 
                     type="number" 
                     value={lowStockThreshold}
                     onChange={(e) => setLowStockThreshold(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold" 
                     placeholder="VD: 5"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-slate-500 ml-1">Trạng thái</label>
+                  <label className="md:text-sm text-xs font-bold text-slate-500 ml-1 text-emerald-600">Trạng thái</label>
                   <select
                     value={pStatus}
                     onChange={(e) => setPStatus(e.target.value as any)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl md:text-lg text-sm outline-none mt-1 focus:border-blue-400 focus:bg-white transition-all shadow-sm font-bold text-emerald-700"
                   >
                     <option value="Đang kinh doanh">⚡ Đang kinh doanh</option>
                     <option value="Ngừng kinh doanh">🚫 Ngừng kinh doanh</option>
@@ -1112,11 +1132,11 @@ return (
               <button 
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex-1 bg-emerald-600 text-white py-3 md:py-4 rounded-xl font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all hover:bg-emerald-700 disabled:bg-slate-400 disabled:shadow-none flex items-center justify-center gap-2"
+                className="flex-1 bg-emerald-600 text-white py-4 md:py-5 rounded-xl font-black md:text-xl text-sm shadow-lg shadow-emerald-200 active:scale-95 transition-all hover:bg-emerald-700 disabled:bg-slate-400 disabled:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest"
               >
                 {isSaving ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     {saveStatus || 'Đang xử lý...'}
                   </>
                 ) : (
@@ -1125,7 +1145,7 @@ return (
               </button>
               <button 
                 onClick={handleCloseModal}
-                className="flex-1 py-3 md:py-4 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95"
+                className="flex-1 py-3 md:py-4 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95 md:hidden"
               >
                 Đóng
               </button>

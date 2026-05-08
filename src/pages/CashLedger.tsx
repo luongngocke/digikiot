@@ -428,7 +428,7 @@ return (
                 </button>
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-[#991b1b] text-white py-3.5 rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] active:scale-95 transition-all"
+                  className="flex-1 bg-[#991b1b] text-white py-3.5 rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] active:scale-95 transition-all md:hidden"
                 >
                   Đóng
                 </button>

@@ -39,6 +39,7 @@ export const ImportHistory: React.FC = () => {
   } = useAppContext();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDebtOnly, setShowDebtOnly] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<ImportOrder | null>(null);
   const [printData, setPrintData] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -167,15 +168,17 @@ export const ImportHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
-  const filteredOrders = (importOrders || []).filter(
-    (order) =>
+  const filteredOrders = (importOrders || []).filter((order) => {
+    const matchesSearch =
       (order.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.supplier || "").toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+      (order.supplier || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDebt = showDebtOnly ? order.debt > 0 : true;
+    return matchesSearch && matchesDebt;
+  });
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, rowsPerPage]);
+  }, [searchTerm, rowsPerPage, showDebtOnly]);
 
   const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -191,18 +194,36 @@ export const ImportHistory: React.FC = () => {
     <div className="flex flex-col h-full bg-slate-50 md:bg-white">
       <div className="bg-white md:rounded-xl md:shadow-sm md:border md:border-slate-200 flex flex-col mx-auto w-full h-full overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-center bg-white md:bg-slate-50/50 shrink-0">
-          <div className="relative w-full md:max-w-md">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={16}
-            />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm mã phiếu, NCC..."
-              className="w-full bg-slate-50 md:bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-blue-500 shadow-sm font-medium transition-all"
-            />
+          <div className="relative w-full md:max-w-md flex gap-2">
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm mã phiếu, NCC..."
+                className="w-full bg-slate-50 md:bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-blue-500 shadow-sm font-medium transition-all"
+              />
+            </div>
+            <button
+              onClick={() => setShowDebtOnly(!showDebtOnly)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-xs font-bold whitespace-nowrap ${
+                showDebtOnly 
+                ? 'bg-orange-600 border-orange-600 text-white shadow-md shadow-orange-100' 
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'
+              }`}
+            >
+              <CreditCard size={14} />
+              <span className={showDebtOnly ? 'inline' : 'hidden sm:inline'}>Đơn nợ</span>
+              {showDebtOnly && (
+                <span className="bg-white text-orange-600 px-1.5 py-0.5 rounded-full text-[10px]">
+                  {importOrders.filter(i => i.debt > 0).length}
+                </span>
+              )}
+            </button>
           </div>
           <div className="hidden md:flex gap-2">
             <Link
@@ -423,7 +444,7 @@ export const ImportHistory: React.FC = () => {
       {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center md:p-4 p-0 bg-slate-900/60 backdrop-blur-sm print:hidden">
-          <div className="bg-white w-full max-w-2xl md:rounded-2xl rounded-none shadow-2xl overflow-hidden flex flex-col h-full md:h-auto md:max-h-[90vh] animate-in fade-in zoom-in duration-300">
+          <div className="bg-white w-full max-w-5xl md:rounded-2xl rounded-none shadow-2xl overflow-hidden flex flex-col h-full md:h-auto md:max-h-[90vh] animate-in fade-in zoom-in duration-300">
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
@@ -431,10 +452,10 @@ export const ImportHistory: React.FC = () => {
                   <Truck size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 tracking-tighter">
+                  <h3 className="md:text-xl text-lg font-bold text-slate-800 tracking-tighter">
                     Chi tiết phiếu nhập
                   </h3>
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                  <p className="md:text-sm text-[10px] font-bold text-blue-600 uppercase tracking-widest">
                     Mã: {selectedOrder.id}
                   </p>
                 </div>
@@ -460,10 +481,10 @@ export const ImportHistory: React.FC = () => {
                 <div className="flex items-start gap-2.5">
                   <Truck className="text-blue-500 shrink-0 mt-0.5" size={14} />
                   <div className="min-w-0">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+                    <p className="md:text-xs text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">
                       Nhà cung cấp
                     </p>
-                    <p className="text-xs font-black text-slate-800 leading-tight truncate">
+                    <p className="md:text-base text-xs font-black text-slate-800 leading-tight truncate">
                       {selectedOrder.supplier}
                     </p>
                   </div>
@@ -475,10 +496,10 @@ export const ImportHistory: React.FC = () => {
                     size={14}
                   />
                   <div className="min-w-0 flex-1 flex items-center gap-2">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                    <p className="md:text-xs text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
                       Ngày nhập:
                     </p>
-                    <p className="text-xs font-bold text-slate-700 leading-none">
+                    <p className="md:text-base text-xs font-bold text-slate-700 leading-none">
                       {selectedOrder.date}
                     </p>
                   </div>
@@ -488,7 +509,7 @@ export const ImportHistory: React.FC = () => {
               <div className="border border-slate-100 rounded-lg overflow-hidden">
                 <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex items-center gap-2">
                   <Package className="text-slate-400" size={14} />
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <span className="md:text-sm text-[10px] font-black text-slate-500 uppercase tracking-widest">
                     Danh sách mặt hàng
                   </span>
                 </div>
@@ -498,16 +519,16 @@ export const ImportHistory: React.FC = () => {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-slate-50">
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase">
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase">
                           Sản phẩm
                         </th>
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase text-center">
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase text-center">
                           SL
                         </th>
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase text-right">
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase text-right">
                           Giá nhập
                         </th>
-                        <th className="px-4 py-3 text-[9px] font-bold text-slate-400 uppercase text-right">
+                        <th className="px-4 py-3 md:text-sm text-[9px] font-bold text-slate-400 uppercase text-right">
                           Thành tiền
                         </th>
                       </tr>
@@ -516,7 +537,7 @@ export const ImportHistory: React.FC = () => {
                       {selectedOrder.items.map((item, idx) => (
                         <tr key={idx}>
                           <td className="px-4 py-3">
-                            <p className="text-xs font-bold text-slate-800 tracking-tighter">
+                            <p className="md:text-base text-xs font-bold text-slate-800 tracking-tighter">
                               {item.name}
                             </p>
                             <div className="flex flex-wrap gap-2 mt-1">
@@ -528,7 +549,7 @@ export const ImportHistory: React.FC = () => {
                                   ).map((sn: string, sIdx: number) => (
                                     <span
                                       key={sIdx}
-                                      className="text-[13px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded font-mono font-bold border border-orange-100 uppercase"
+                                      className="md:text-sm text-[13px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded font-mono font-bold border border-orange-100 uppercase"
                                     >
                                       {sn.trim()}
                                     </span>
@@ -537,13 +558,13 @@ export const ImportHistory: React.FC = () => {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center text-xs font-bold text-slate-600">
+                          <td className="px-4 py-3 text-center md:text-sm text-xs font-bold text-slate-600">
                             {item.qty} {item.unit}
                           </td>
-                          <td className="px-4 py-3 text-right text-xs font-bold text-slate-600">
+                          <td className="px-4 py-3 text-right md:text-sm text-xs font-bold text-slate-600">
                             {formatNumber(item.price)}đ
                           </td>
-                          <td className="px-4 py-3 text-right text-xs font-bold text-slate-800">
+                          <td className="px-4 py-3 text-right md:text-sm text-xs font-bold text-slate-800">
                             {formatNumber(item.qty * item.price)}đ
                           </td>
                         </tr>
@@ -624,8 +645,8 @@ export const ImportHistory: React.FC = () => {
 
               <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 space-y-3">
                 <div className="flex justify-between items-center text-slate-600">
-                  <span className="text-[11px] font-bold">Tổng tiền hàng</span>
-                  <span className="text-sm font-bold">
+                  <span className="md:text-sm text-[11px] font-bold">Tổng tiền hàng</span>
+                  <span className="md:text-base text-sm font-bold">
                     {formatNumber(
                       selectedOrder.total - (selectedOrder.shippingFee || 0),
                     )}
@@ -635,10 +656,10 @@ export const ImportHistory: React.FC = () => {
 
                 {selectedOrder.shippingFee && (
                   <div className="flex justify-between items-center text-orange-500">
-                    <span className="text-[11px] font-bold">
+                    <span className="md:text-sm text-[11px] font-bold">
                       Phí vận chuyển
                     </span>
-                    <span className="text-sm font-bold">
+                    <span className="md:text-base text-sm font-bold">
                       +{formatNumber(selectedOrder.shippingFee)}đ
                     </span>
                   </div>
@@ -646,31 +667,33 @@ export const ImportHistory: React.FC = () => {
                 <div className="flex justify-between items-center pt-3 border-t border-blue-200">
                   <div className="flex items-center gap-2">
                     <Wallet className="text-blue-600" size={18} />
-                    <span className="text-[13px] font-bold text-blue-800">
+                    <span className="md:text-base text-[13px] font-bold text-blue-800">
                       Tổng thanh toán
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-blue-600 tracking-tighter">
+                  <span className="md:text-3xl text-2xl font-bold text-blue-600 tracking-tighter">
                     {formatNumber(selectedOrder.total)}đ
                   </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-4 border-t border-blue-200">
                   <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 flex justify-between items-center">
-                    <p className="text-[9px] font-bold text-emerald-600">
-                      Đã thanh toán
+                    <div className="flex flex-col">
+                      <p className="md:text-xs text-[9px] font-bold text-emerald-600">
+                        Đã thanh toán
+                      </p>
                       {selectedOrder.walletId && (
-                        <span className="block text-[8px] font-medium text-emerald-500 mt-0.5">
+                        <span className="md:text-xs block text-[8px] font-medium text-emerald-500 mt-0.5">
                           ({wallets.find(w => w.id === selectedOrder.walletId)?.name || 'Ví đã xóa'})
                         </span>
                       )}
-                    </p>
-                    <p className="text-sm font-bold text-emerald-700">
+                    </div>
+                    <p className="md:text-lg text-sm font-bold text-emerald-700">
                       {formatNumber(selectedOrder.paid)}đ
                     </p>
                   </div>
                   <div className="bg-red-50/50 p-3 rounded-xl border border-red-100 flex justify-between items-center">
-                    <p className="text-[9px] font-bold text-red-600">Còn nợ</p>
-                    <p className="text-sm font-bold text-red-700">
+                    <p className="md:text-xs text-[9px] font-bold text-red-600">Còn nợ</p>
+                    <p className="md:text-lg text-sm font-bold text-red-700">
                       {formatNumber(selectedOrder.debt)}đ
                     </p>
                   </div>
@@ -687,30 +710,30 @@ export const ImportHistory: React.FC = () => {
                       setPaymentAmount(selectedOrder.debt.toString());
                       setIsPaymentModalOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white font-bold rounded-xl text-[13px] shadow-lg shadow-emerald-100 active:scale-95"
+                    className="flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white font-bold rounded-xl md:text-base text-[13px] shadow-lg shadow-emerald-100 active:scale-95"
                   >
                     <Wallet size={16} /> Thanh toán
                   </button>
                 )}
                 <button
                   onClick={() => handleReturnOrder(selectedOrder)}
-                  className="flex items-center justify-center gap-2 py-3 bg-orange-50 border border-orange-200 text-orange-600 font-bold rounded-xl text-[13px] active:scale-95 hover:bg-orange-100"
+                  className="flex items-center justify-center gap-2 py-3 bg-orange-50 border border-orange-200 text-orange-600 font-bold rounded-xl md:text-base text-[13px] active:scale-95 hover:bg-orange-100"
                 >
                   <RotateCcw size={16} /> Trả hàng
                 </button>
                 <button
                   onClick={() => handleOpenOrder(selectedOrder)}
-                  className="col-span-2 md:col-auto flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 text-blue-600 font-bold rounded-xl text-[13px] active:scale-95 hover:bg-blue-100 shadow-sm"
+                  className="col-span-2 md:col-auto flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 text-blue-600 font-bold rounded-xl md:text-base text-[13px] active:scale-95 hover:bg-blue-100 shadow-sm"
                 >
                   <ExternalLink size={16} /> Sửa phiếu
                 </button>
               </div>
             </div>
 
-            <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 space-y-3 shrink-0">
+            <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50 space-y-3 shrink-0 md:hidden">
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="w-full py-3 bg-[#991b1b] text-white font-bold rounded-xl text-[13px] hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100 active:scale-95"
+                className="w-full py-3 bg-[#991b1b] text-white font-bold rounded-xl md:text-base text-[13px] hover:bg-[#7f1d1d] transition-colors shadow-lg shadow-red-100 active:scale-95"
               >
                 Đóng
               </button>
@@ -732,10 +755,10 @@ export const ImportHistory: React.FC = () => {
                   <Wallet size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">
+                  <h2 className="md:text-xl text-lg font-bold text-slate-800">
                     Thanh toán phiếu nhập
                   </h2>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                  <p className="md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                     {selectedOrder.id}
                   </p>
                 </div>
@@ -749,15 +772,15 @@ export const ImportHistory: React.FC = () => {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                <label className="block md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
                   Số tiền còn nợ
                 </label>
-                <div className="text-2xl font-bold text-red-600">
+                <div className="md:text-3xl text-2xl font-bold text-red-600">
                   {formatNumber(selectedOrder.debt)}đ
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                <label className="block md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
                   Số tiền thanh toán
                 </label>
                 <div className="relative">
@@ -769,7 +792,7 @@ export const ImportHistory: React.FC = () => {
                     onChange={(e) =>
                       setPaymentAmount(e.target.value.replace(/[^0-9]/g, ""))
                     }
-                    className="w-full pl-4 pr-12 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 text-lg transition-colors"
+                    className="w-full pl-4 pr-12 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 md:text-2xl text-lg transition-colors"
                     placeholder="0"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
@@ -778,13 +801,13 @@ export const ImportHistory: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                <label className="block md:text-sm text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
                   Ví thanh toán
                 </label>
                 <select
                   value={paymentWalletId || ""}
                   onChange={(e) => setPaymentWalletId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 text-sm transition-colors cursor-pointer appearance-none"
+                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-emerald-500 font-bold text-slate-800 md:text-base text-sm transition-colors cursor-pointer appearance-none"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                     backgroundPosition: `right 0.5rem center`,
@@ -807,7 +830,7 @@ export const ImportHistory: React.FC = () => {
             <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
               <button
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="flex-1 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold uppercase text-sm tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+                className="flex-1 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold uppercase md:text-base text-sm tracking-widest hover:bg-slate-50 transition-all active:scale-95"
               >
                 Hủy
               </button>
@@ -817,7 +840,7 @@ export const ImportHistory: React.FC = () => {
                   !paymentAmount ||
                   Number(paymentAmount.replace(/[^0-9]/g, "")) <= 0
                 }
-                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-sm tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase md:text-base text-sm tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Xác nhận
               </button>

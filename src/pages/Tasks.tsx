@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Task, TelegramSettings, Customer, Invoice, MaintenanceRecord } from '../types';
-import { formatDateTime, parseDateString } from '../lib/utils';
+import { formatDateTime, parseDateString, smartParseDate } from '../lib/utils';
 import { generateId } from '../lib/idUtils';
 import { useMobileBackModal } from '../hooks/useMobileBackModal';
 import { motion, AnimatePresence } from 'motion/react';
@@ -137,16 +137,8 @@ export const Tasks: React.FC = () => {
   // Helper to format time ago
   const getTimeAgo = (dateStr: string) => {
     try {
-      let date: Date;
-      if (dateStr.includes('/')) {
-        // Handle HH:mm:ss DD/MM/YYYY
-        const [time, datePart] = dateStr.split(' ');
-        const [day, month, year] = datePart.split('/');
-        const [hour, min, sec] = time.split(':');
-        date = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(min), Number(sec));
-      } else {
-        date = new Date(dateStr);
-      }
+      const date = smartParseDate(dateStr);
+      if (isNaN(date.getTime())) return { text: dateStr, color: 'text-slate-400' };
 
       const diffInMs = now.getTime() - date.getTime();
       const diffInSecs = Math.floor(diffInMs / 1000);
@@ -155,8 +147,8 @@ export const Tasks: React.FC = () => {
 
       const color = diffInHours < 24 ? 'text-emerald-500' : 'text-red-500';
 
-      if (diffInMins < 1) return { text: `${diffInSecs} giây trước`, color };
-      if (diffInMins < 60) return { text: `${diffInMins} phút ${diffInSecs % 60} giây trước`, color };
+      if (diffInSecs < 60) return { text: `${Math.max(0, diffInSecs)} giây trước`, color };
+      if (diffInMins < 60) return { text: `${diffInMins} phút trước`, color };
       
       if (diffInHours < 24) return { text: `${diffInHours} giờ trước`, color };
       
@@ -173,8 +165,11 @@ export const Tasks: React.FC = () => {
     try {
       const s = parseDateString(startStr);
       const e = typeof endStr === 'number' ? endStr : parseDateString(endStr);
-      if (!s || !e || isNaN(s) || isNaN(e) || e < s) return '';
-      const diffInMins = Math.floor((e - s) / 60000);
+      if (!s || !e || isNaN(s) || isNaN(e)) return '';
+      
+      // Handle the case where end might be slightly before start due to clock drift or parsing edge cases
+      const diffInMs = Math.abs(e - s);
+      const diffInMins = Math.floor(diffInMs / 60000);
       const diffInHours = Math.floor(diffInMins / 60);
       const diffInDays = Math.floor(diffInHours / 24);
 
@@ -517,8 +512,9 @@ export const Tasks: React.FC = () => {
                           Hoàn thành trong {formatTaskDuration(task.createdAt, task.completedAt)}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 text-[9px] font-black italic text-red-500">
-                          {formatTaskDuration(task.createdAt, now.getTime())} trước
+                        <div className={`flex items-center gap-1 text-[9px] font-black italic ${getTimeAgo(task.createdAt).color}`}>
+                          <Clock size={10} />
+                          {getTimeAgo(task.createdAt).text}
                         </div>
                       )}
                     </div>
@@ -623,9 +619,9 @@ export const Tasks: React.FC = () => {
                             <span>{task.dueDate ? formatDateTime(task.dueDate) : 'Không thời hạn'}</span>
                           </div>
                           {task.status !== 'COMPLETED' ? (
-                            <div className={`text-[10px] font-black italic flex items-center gap-1 ${task.dueDate ? getTimeRemaining(task.dueDate)?.color : 'text-red-500'}`}>
+                            <div className={`text-[10px] font-black italic flex items-center gap-1 ${task.dueDate ? getTimeRemaining(task.dueDate)?.color : getTimeAgo(task.createdAt).color}`}>
                               <Clock size={11} />
-                              {task.dueDate ? getTimeRemaining(task.dueDate)?.text : `${formatTaskDuration(task.createdAt, now.getTime())} trước`}
+                              {task.dueDate ? getTimeRemaining(task.dueDate)?.text : getTimeAgo(task.createdAt).text}
                             </div>
                           ) : (
                             task.completedAt && (

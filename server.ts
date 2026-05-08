@@ -265,8 +265,33 @@ async function sendStockAlert() {
 
 async function startServer() {
   const app = express();
-  cron.schedule("0 19 * * *", () => sendDailyReport().catch(e => console.error(e)), { timezone: "Asia/Ho_Chi_Minh" });
-  cron.schedule("0 7 * * *", () => sendStockAlert().catch(e => console.error(e)), { timezone: "Asia/Ho_Chi_Minh" });
+  
+  console.log("[Server] Initializing scheduled tasks (Asia/Ho_Chi_Minh)...");
+  
+  // Gửi báo cáo doanh thu lúc 19:00 hàng ngày (Tất toán cuối ngày)
+  cron.schedule("0 19 * * *", async () => {
+    console.log("[Cron] 19:00 Triggered: Sending daily report...");
+    try {
+      // Ở v7:00pm, thường người dùng muốn báo cáo của CHÍNH NGÀY HÔM ĐÓ
+      const r = await sendDailyReport(true); 
+      console.log("[Cron] 19:00 Success:", r.count, "invoices processed.");
+    } catch (e) {
+      console.error("[Cron] 19:00 Error:", e);
+    }
+  }, { timezone: "Asia/Ho_Chi_Minh" });
+
+  // Gửi cảnh báo tồn kho lúc 07:00 sáng hàng ngày
+  cron.schedule("0 7 * * *", async () => {
+    console.log("[Cron] 07:00 Triggered: Checking inventory stock alerts...");
+    try {
+      const r = await sendStockAlert();
+      console.log("[Cron] 07:00 Success:", r.count, "items flagged.");
+    } catch (e) {
+      console.error("[Cron] 07:00 Error:", e);
+    }
+  }, { timezone: "Asia/Ho_Chi_Minh" });
+
+  console.log("[Server] Crons scheduled: 07:00 (Stock) and 19:00 (Report)");
 
   app.get("/api/telegram/test-report", async (req, res) => {
     try { const r = await sendDailyReport(true); res.json(r); } 

@@ -1158,8 +1158,8 @@ return (
       {/* Record Detail Modal */}
       {selectedRecord && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] max-w-md md:max-w-4xl flex flex-col rounded-none md:rounded-xl shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 shrink-0">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] max-w-md md:max-w-6xl flex flex-col rounded-none md:rounded-xl shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div className="flex justify-between items-center p-4 md:px-6 md:py-4 border-b border-slate-100 shrink-0">
               <h3 className="text-lg font-bold text-slate-800 tracking-tight">Chi tiết phiếu {selectedRecord.id}</h3>
               <div className="flex gap-2">
                 {!isEditingRecord ? (
@@ -1193,7 +1193,7 @@ return (
               </div>
             </div>
             
-            <div className={`p-6 overflow-y-auto flex-1 no-scrollbar`}>
+            <div className={`p-4 md:p-5 overflow-y-auto flex-1 no-scrollbar`}>
               {isEditingRecord ? (
                 /* Editing Layout */
                 <div className="space-y-4">
@@ -1230,45 +1230,45 @@ return (
                 </div>
               ) : (
                 /* Detail/Grid Layout */
-                <div className="md:grid md:grid-cols-2 md:gap-8 space-y-8 md:space-y-0">
+                <div className="md:grid md:grid-cols-2 md:gap-6 space-y-6 md:space-y-0">
                   {/* Column 1: Identity & Process Handling */}
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                      <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center shrink-0">
-                        <User size={24} />
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                        <User size={20} />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-slate-800 tracking-tight leading-none mb-1">{selectedRecord.customerName}</p>
-                        <p className="text-xs text-slate-500 font-semibold font-mono">{selectedRecord.customerPhone}</p>
+                        <p className="font-bold text-slate-800 tracking-tight leading-none mb-0.5">{selectedRecord.customerName}</p>
+                        <p className="text-[11px] text-slate-500 font-semibold font-mono">{selectedRecord.customerPhone}</p>
                       </div>
                     </div>
 
-                    <div className="bg-white p-5 rounded-2xl border border-slate-100 space-y-4 shadow-sm">
-                      <div className="flex items-start gap-3">
-                        <Tag className="text-amber-500 shrink-0" size={18} />
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 space-y-3 shadow-sm">
+                      <div className="flex items-start gap-2.5">
+                        <Tag className="text-amber-500 shrink-0 mt-0.5" size={16} />
                         <div className="flex-1">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thiết bị</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Thiết bị</p>
                           <p className="text-sm font-bold text-slate-800 leading-snug">{selectedRecord.productName}</p>
                           {selectedRecord.serialNumber && (
-                            <span className="mt-1 inline-block px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded font-mono text-[10px] font-bold border border-orange-100">
+                            <span className="mt-0.5 inline-block px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded font-mono text-[9px] font-bold border border-orange-100">
                               SN: {selectedRecord.serialNumber}
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="text-rose-500 shrink-0" size={18} />
+                      <div className="flex items-start gap-2.5">
+                        <AlertCircle className="text-rose-500 shrink-0 mt-0.5" size={16} />
                         <div className="flex-1">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tình trạng lỗi</p>
-                          <p className="text-sm font-medium text-slate-600 bg-slate-50/80 p-3 rounded-lg border border-slate-100/50">{selectedRecord.issue}</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Tình trạng lỗi</p>
+                          <p className="text-[13px] font-medium text-slate-600 bg-slate-50/80 p-2 rounded-lg border border-slate-100/50">{selectedRecord.issue}</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2 px-1">
-                        <Clock className="text-blue-500" size={18} />
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Quy trình xử lý</p>
+                        <Clock className="text-blue-500" size={16} />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quy trình xử lý</p>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2">
@@ -1280,7 +1280,7 @@ return (
                                 setStatusConfirmModal({ isOpen: true, newStatus: s, recordId: selectedRecord.id });
                               }
                             }}
-                            className={`px-3 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all flex items-center justify-center text-center ${selectedRecord.status === s ? getStatusColor(s) + ' shadow-lg scale-105 ring-2 ring-white z-10' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                            className={`px-3 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all flex items-center justify-center text-center ${selectedRecord.status === s ? getStatusColor(s) + ' shadow-lg scale-105 ring-2 ring-white z-10' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
                           >
                             {getStatusText(s)}
                           </button>
@@ -1288,10 +1288,10 @@ return (
                       </div>
 
                       {['COMPLETED', 'RETURNED'].includes(selectedRecord.status) && (
-                        <div className="mt-4 space-y-2 animate-in slide-in-from-top-2 duration-300">
+                        <div className="mt-3 space-y-2 animate-in slide-in-from-top-2 duration-300">
                           <textarea
                             placeholder="Nhập nội dung sửa chữa, linh kiện thay thế..."
-                            className="w-full text-sm p-4 border border-slate-200 rounded-2xl outline-none focus:border-blue-400 bg-white shadow-inner h-28 transition-all"
+                            className="w-full text-sm p-3 border border-slate-200 rounded-2xl outline-none focus:border-blue-400 bg-white shadow-inner h-24 transition-all"
                             value={feedbackText}
                             onChange={(e) => setFeedbackText(e.target.value)}
                           />
@@ -1301,7 +1301,7 @@ return (
                               setSelectedRecord({...selectedRecord, feedback: feedbackText});
                               alert('Đã lưu thông tin sửa chữa!');
                             }}
-                            className="w-full py-3.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all active:scale-95"
+                            className="w-full py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
                           >
                             Lưu thông tin xử lý
                           </button>
@@ -1311,14 +1311,14 @@ return (
                   </div>
 
                   {/* Column 2: Financial, Transfer & Invoice */}
-                  <div className="space-y-6">
-                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-5 shadow-sm">
-                      <div className="flex flex-col gap-1 w-full relative">
-                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-1">Ước tính chi phí (Sửa chữa)</span>
-                        <div className="flex items-center gap-2 relative w-full bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-inner focus-within:border-blue-400 transition-all">
+                  <div className="space-y-4">
+                    <div className="bg-slate-50 p-4 rounded-3xl border border-slate-200 space-y-4 shadow-sm">
+                      <div className="flex flex-col gap-0.5 w-full relative">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Ước tính chi phí (Sửa chữa)</span>
+                        <div className="flex items-center gap-2 relative w-full bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-inner focus-within:border-blue-400 transition-all">
                           <input 
                             type="text"
-                            className="text-xl font-black text-slate-800 bg-transparent outline-none w-full"
+                            className="text-lg font-black text-slate-800 bg-transparent outline-none w-full"
                             value={formatNumber(selectedRecord.cost)}
                             onChange={(e) => {
                               const val = parseFormattedNumber(e.target.value) || 0;
@@ -1326,17 +1326,17 @@ return (
                               setSelectedRecord({...selectedRecord, cost: val, newDebt: (selectedRecord.oldDebt || 0) + val - (selectedRecord.paidAmount || 0)});
                             }}
                           />
-                          <span className="text-lg font-black text-slate-400">đ</span>
+                          <span className="text-base font-black text-slate-400">đ</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1 w-full relative">
-                          <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest pl-1">Đã thanh toán</span>
-                          <div className="flex items-center gap-2 relative w-full bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-inner focus-within:border-emerald-400 transition-all">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-0.5 w-full relative">
+                          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Đã thanh toán</span>
+                          <div className="flex items-center gap-2 relative w-full bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-inner focus-within:border-emerald-400 transition-all">
                             <input 
                               type="text"
-                              className="text-lg font-black text-emerald-700 bg-transparent outline-none w-full"
+                              className="text-base font-black text-emerald-700 bg-transparent outline-none w-full"
                               value={formatNumber(selectedRecord.paidAmount || 0)}
                               onChange={(e) => {
                                 const val = parseFormattedNumber(e.target.value) || 0;
@@ -1344,43 +1344,43 @@ return (
                                 setSelectedRecord({...selectedRecord, paidAmount: val, newDebt: (selectedRecord.oldDebt || 0) + (selectedRecord.cost || 0) - val});
                               }}
                             />
-                            <span className="text-base font-black text-emerald-400">đ</span>
+                            <span className="text-sm font-black text-emerald-400">đ</span>
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-1 w-full relative">
-                          <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-1">Nợ trước đơn</span>
-                          <div className="flex items-center gap-2 relative w-full bg-slate-50 px-4 py-3 rounded-2xl border border-slate-200">
+                        <div className="flex flex-col gap-0.5 w-full relative">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Nợ trước đơn</span>
+                          <div className="flex items-center gap-2 relative w-full bg-slate-50/50 px-4 py-2.5 rounded-2xl border border-slate-200">
                             <input 
                               type="text"
-                              className="text-lg font-black text-slate-500 bg-transparent outline-none w-full cursor-not-allowed"
+                              className="text-base font-black text-slate-500 bg-transparent outline-none w-full cursor-not-allowed"
                               value={formatNumber(selectedRecord.oldDebt || 0)}
                               readOnly
                             />
-                            <span className="text-base font-black text-slate-400">đ</span>
+                            <span className="text-sm font-black text-slate-400">đ</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center bg-slate-100 p-4 rounded-2xl shadow-inner border border-slate-200">
-                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">Nợ sau đơn</span>
+                      <div className="flex justify-between items-center bg-slate-100 p-3 rounded-2xl shadow-inner border border-slate-200">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nợ sau đơn</span>
                         <div className="flex items-center gap-1">
-                          <span className="text-xl font-black text-rose-600">{formatNumber(selectedRecord.newDebt || ((selectedRecord.oldDebt || 0) + (selectedRecord.cost || 0) - (selectedRecord.paidAmount || 0)))}</span>
-                          <span className="text-lg font-black text-rose-400">đ</span>
+                          <span className="text-lg font-black text-rose-600">{formatNumber(selectedRecord.newDebt || ((selectedRecord.oldDebt || 0) + (selectedRecord.cost || 0) - (selectedRecord.paidAmount || 0)))}</span>
+                          <span className="text-base font-black text-rose-400">đ</span>
                         </div>
                       </div>
 
                       {selectedRecord.invoiceId ? (() => {
                         const linkedInvoice = invoices?.find(inv => inv.id === selectedRecord.invoiceId);
                         return (
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between text-emerald-800 bg-white border border-emerald-100 px-4 py-3 rounded-2xl shadow-sm">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-emerald-800 bg-white border border-emerald-100 px-4 py-2.5 rounded-2xl shadow-sm">
                               <div className="flex items-center gap-2">
-                                <CheckCircle size={18} className="text-emerald-500" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Đã lập hóa đơn</span>
+                                <CheckCircle size={16} className="text-emerald-500" />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Đã lập hóa đơn</span>
                               </div>
                               <span 
-                                className="font-black text-xs tracking-widest cursor-pointer hover:underline text-blue-600"
+                                className="font-black text-[11px] tracking-widest cursor-pointer hover:underline text-blue-600"
                                 onClick={() => {
                                   if (linkedInvoice) {
                                     setSelectedInvoiceForDetail(linkedInvoice);
@@ -1393,16 +1393,16 @@ return (
                               </span>
                             </div>
                             {linkedInvoice && (
-                              <div className="bg-white border border-slate-200 p-4 rounded-2xl space-y-2 shadow-sm">
+                              <div className="bg-white border border-slate-200 p-3 rounded-2xl space-y-1.5 shadow-sm">
                                 {linkedInvoice.items.map((item, idxx) => (
-                                  <div key={idxx} className="flex justify-between items-center text-[13px]">
+                                  <div key={idxx} className="flex justify-between items-center text-[12px]">
                                     <span className="text-slate-600 font-bold line-clamp-1 flex-1 pr-4">{item.qty}x {item.name}</span>
                                     <span className="text-slate-900 font-black">{formatNumber(item.price * item.qty)}đ</span>
                                   </div>
                                 ))}
-                                <div className="flex justify-between items-center pt-3 mt-1 border-t border-dashed border-slate-200">
-                                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tổng cộng</span>
-                                  <span className="text-base font-black text-blue-600">{formatNumber(linkedInvoice.total)}đ</span>
+                                <div className="flex justify-between items-center pt-2 mt-1 border-t border-dashed border-slate-200">
+                                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Tổng cộng</span>
+                                  <span className="text-sm font-black text-blue-600">{formatNumber(linkedInvoice.total)}đ</span>
                                 </div>
                               </div>
                             )}
@@ -1413,9 +1413,9 @@ return (
                           <div className="animate-in slide-in-from-bottom-2 duration-300">
                             <button
                               onClick={() => setIsInvoiceModalOpen(true)}
-                              className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white font-black uppercase tracking-widest rounded-2xl text-[11px] hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
+                              className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 text-white font-black uppercase tracking-widest rounded-2xl text-[10px] hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
                             >
-                              <Plus size={18} /> Lập Đơn Xuất Bán
+                              <Plus size={16} /> Lập Đơn Xuất Bán
                             </button>
                           </div>
                         )
@@ -1487,7 +1487,7 @@ return (
               )}
             </div>
             
-            <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50/50 shrink-0">
+            <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50/50 shrink-0 md:hidden">
               <button 
                 onClick={() => {
                   setSelectedRecord(null);
@@ -2334,7 +2334,7 @@ return (
 
         return (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg">
@@ -2459,7 +2459,7 @@ return (
                 </div>
               </div>
 
-              <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+              <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3 md:hidden">
                 <button 
                   onClick={() => navigate('/pos', { state: { editInvoice: selectedInvoiceForDetail } })}
                   className="flex-1 py-3 bg-blue-50 border border-blue-200 text-blue-600 font-bold rounded-lg uppercase text-[10px] tracking-widest shadow-sm hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"

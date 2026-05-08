@@ -460,8 +460,8 @@ export const Import: React.FC = () => {
             <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <CheckCircle size={48} />
             </div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-2">Nhập kho thành công!</h3>
-            <p className="text-slate-500 mb-8 font-medium">Phiếu nhập <span className="font-bold text-indigo-600">{showSuccessModal.id}</span> đã được lưu vào hệ thống.</p>
+            <h3 className="md:text-3xl text-2xl font-bold text-slate-800 mb-2">Nhập kho thành công!</h3>
+            <p className="md:text-base text-sm text-slate-500 mb-8 font-medium">Phiếu nhập <span className="font-bold text-indigo-600">{showSuccessModal.id}</span> đã được lưu vào hệ thống.</p>
             
             <div className="flex flex-col gap-3">
               <button 
@@ -482,13 +482,13 @@ export const Import: React.FC = () => {
                   }
                   setShowSuccessModal(null);
                 }}
-                className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl md:text-lg text-base shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
               >
                 <Printer size={20} /> In phiếu nhập
               </button>
               <button 
                 onClick={() => setShowSuccessModal(null)}
-                className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all"
+                className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-xl md:text-lg text-base hover:bg-slate-200 transition-all"
               >
                 Tiếp tục nhập hàng
               </button>
@@ -1365,10 +1365,10 @@ export const Import: React.FC = () => {
       {/* New Product Modal */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-200">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-200 relative">
             <div className="p-6 border-b border-slate-100 bg-slate-50">
-              <h3 className="text-xl font-bold text-slate-800 leading-tight">Thêm sản phẩm mới</h3>
-              <p className="text-xs text-slate-500 font-medium mt-1">Tạo nhanh sản phẩm khi nhập hàng</p>
+              <h3 className="md:text-2xl text-xl font-bold text-slate-800 leading-tight">Thêm sản phẩm mới</h3>
+              <p className="md:text-sm text-xs text-slate-500 font-medium mt-1">Tạo nhanh sản phẩm khi nhập hàng</p>
               <button 
                 onClick={handleCloseProductModal}
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-slate-600 border border-slate-100 shadow-sm transition-all"
@@ -1378,58 +1378,58 @@ export const Import: React.FC = () => {
             </div>
             <div className="p-6 overflow-y-auto space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên sản phẩm *</label>
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên sản phẩm *</label>
                 <input 
                   type="text" 
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Nhập tên sản phẩm..."
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá nhập (vốn)</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá nhập (vốn)</label>
                   <NumericFormat 
                     value={newCost}
                     onValueChange={(v) => setNewCost(v.value)}
                     thousandSeparator="."
                     decimalSeparator=","
                     placeholder="0"
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá bán ra *</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá bán ra *</label>
                   <NumericFormat 
                     value={newPrice}
                     onValueChange={(v) => setNewPrice(v.value)}
                     thousandSeparator="."
                     decimalSeparator=","
                     placeholder="0"
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Đơn vị tính</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Đơn vị tính</label>
                   <input 
                     type="text" 
                     value={newUnit}
                     onChange={(e) => setNewUnit(e.target.value)}
                     placeholder="Cái, Bộ, Mét..."
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Danh mục</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Danh mục</label>
                   <input 
                     type="text" 
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     placeholder="Nhóm sản phẩm..."
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-bold outline-none focus:border-blue-500 focus:bg-white transition-all mt-1 shadow-sm"
                   />
                 </div>
               </div>
@@ -1445,14 +1445,14 @@ export const Import: React.FC = () => {
                     <div className="w-12 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 transition-all"></div>
                     <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-6 shadow-sm"></div>
                   </div>
-                  <span className="text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">Quản lý theo mã Serial / Imei</span>
+                  <span className="md:text-base text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">Quản lý theo mã Serial / Imei</span>
                 </label>
               </div>
             </div>
             <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3">
               <button 
                 onClick={handleCloseProductModal}
-                className="flex-1 py-3 bg-white text-slate-600 border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all shadow-sm"
+                className="flex-1 py-3 bg-white text-slate-600 border border-slate-200 rounded-xl md:text-base text-sm font-bold hover:bg-slate-50 transition-all shadow-sm"
               >
                 Hủy
               </button>
@@ -1482,7 +1482,7 @@ export const Import: React.FC = () => {
                   resetProductForm();
                   setSearchTerm('');
                 }}
-                className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                className="flex-1 py-3 bg-blue-600 text-white rounded-xl md:text-base text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
               >
                 Lưu & Thêm vào phiếu
               </button>
@@ -1494,33 +1494,39 @@ export const Import: React.FC = () => {
       {/* Add Supplier Modal */}
       {isSupplierModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden p-8 animate-in zoom-in duration-200">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 tracking-tight">Thêm nhà cung cấp</h3>
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-8 animate-in zoom-in duration-200 relative">
+            <button 
+              onClick={() => setIsSupplierModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X size={24} />
+            </button>
+            <h3 className="md:text-2xl text-lg font-bold text-slate-800 mb-6 tracking-tight">Thêm nhà cung cấp</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên nhà cung cấp</label>
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên nhà cung cấp</label>
                 <input 
                   id="new-sup-name"
                   type="text" 
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white transition-all mt-1" 
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white transition-all mt-1" 
                   placeholder="Nhập tên..." 
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Số điện thoại</label>
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Số điện thoại</label>
                 <input 
                   id="new-sup-phone"
                   type="text" 
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white transition-all mt-1" 
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white transition-all mt-1" 
                   placeholder="Nhập số điện thoại..." 
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Địa chỉ</label>
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Địa chỉ</label>
                 <input 
                   id="new-sup-address"
                   type="text" 
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white transition-all mt-1" 
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl md:text-base text-sm font-semibold outline-none focus:border-blue-400 focus:bg-white transition-all mt-1" 
                   placeholder="Nhập địa chỉ..." 
                 />
               </div>
@@ -1537,13 +1543,13 @@ export const Import: React.FC = () => {
                       setIsSupplierModalOpen(false);
                     }
                   }}
-                  className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold shadow-md shadow-emerald-200 text-sm active:scale-95 transition-all hover:bg-emerald-700"
+                  className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold shadow-md shadow-emerald-200 md:text-base text-sm active:scale-95 transition-all hover:bg-emerald-700"
                 >
                   Lưu
                 </button>
                 <button 
                   onClick={() => setIsSupplierModalOpen(false)}
-                  className="w-full bg-[#991b1b] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#7f1d1d] transition-all shadow-md shadow-red-100"
+                  className="w-full bg-[#991b1b] text-white py-3.5 rounded-xl font-bold md:text-base text-sm hover:bg-[#7f1d1d] transition-all shadow-md shadow-red-100 md:hidden"
                 >
                   Đóng
                 </button>
@@ -1560,19 +1566,19 @@ export const Import: React.FC = () => {
               <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Info size={32} />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Xác nhận nhập hàng</h3>
-              <p className="text-slate-500 text-sm mb-6">Bạn có chắc chắn muốn hoàn thành phiếu nhập hàng này không?</p>
+              <h3 className="md:text-2xl text-xl font-black text-slate-800 mb-2">Xác nhận nhập hàng</h3>
+              <p className="md:text-base text-sm text-slate-500 mb-6">Bạn có chắc chắn muốn hoàn thành phiếu nhập hàng này không?</p>
               <div className="flex gap-3">
                 <button 
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl md:text-lg text-base hover:bg-slate-200 transition-colors"
                 >
                   Hủy
                 </button>
                 <button 
                   onClick={handleImport}
                   disabled={isSubmitting}
-                  className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-200"
+                  className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl md:text-lg text-base hover:bg-blue-700 transition-colors shadow-md shadow-blue-200"
                 >
                   {isSubmitting ? 'Đang xử lý...' : 'Đồng ý'}
                 </button>
@@ -1590,8 +1596,8 @@ export const Import: React.FC = () => {
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FileText size={32} />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">Đơn nhập chưa hoàn thành</h3>
-              <p className="text-slate-500 text-sm mb-6">Bạn có đơn nhập hàng đang tạo dở. Bạn có muốn tiếp tục hay tạo một đơn mới?</p>
+              <h3 className="md:text-2xl text-xl font-black text-slate-800 mb-2">Đơn nhập chưa hoàn thành</h3>
+              <p className="md:text-base text-sm text-slate-500 mb-6">Bạn có đơn nhập hàng đang tạo dở. Bạn có muốn tiếp tục hay tạo một đơn mới?</p>
               <div className="flex gap-3">
                 <button 
                   onClick={() => {
@@ -1601,7 +1607,7 @@ export const Import: React.FC = () => {
                     setImportDraft(undefined);
                     setShowDraftPrompt(false);
                   }}
-                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl md:text-lg text-base hover:bg-slate-200 transition-colors"
                 >
                   Tạo mới
                 </button>
@@ -1609,7 +1615,7 @@ export const Import: React.FC = () => {
                   onClick={() => {
                     setShowDraftPrompt(false);
                   }}
-                  className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200"
+                  className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl md:text-lg text-base hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200"
                 >
                   Tiếp tục
                 </button>

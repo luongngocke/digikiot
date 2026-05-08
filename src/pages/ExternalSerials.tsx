@@ -274,28 +274,28 @@ return (externalSerials || []).filter(s =>
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-5 md:p-6 border-b border-slate-100 bg-slate-50">
-              <h2 className="text-xl font-bold text-slate-800">
+              <h2 className="md:text-2xl text-xl font-bold text-slate-800">
                 {editId ? 'Sửa thông tin Serial' : 'Thêm External Serial'}
               </h2>
-              <p className="text-sm text-slate-500 mt-1">Lưu trữ serial từ nguồn bên ngoài</p>
+              <p className="md:text-base text-sm text-slate-500 mt-1">Lưu trữ serial từ nguồn bên ngoài</p>
             </div>
             
             <div className="p-5 md:p-6 overflow-y-auto space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Tên sản phẩm <span className="text-red-500">*</span></label>
+                <label className="block md:text-base text-sm font-bold text-slate-700 mb-1">Tên sản phẩm <span className="text-red-500">*</span></label>
                 <input 
                   type="text" 
                   value={product}
                   onChange={(e) => setProduct(e.target.value)}
                   placeholder="Nhập tên sản phẩm..."
-                  className="w-full border shadow-sm border-slate-200 rounded-lg px-4 py-3 focus:border-blue-500 outline-none text-sm font-medium transition-all"
+                  className="w-full border shadow-sm border-slate-200 rounded-lg px-4 py-3 focus:border-blue-500 outline-none md:text-base text-sm font-medium transition-all"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Serial Number <span className="text-red-500">*</span></label>
+                <label className="block md:text-base text-sm font-bold text-slate-700 mb-1">Serial Number <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <Code size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input 
@@ -303,13 +303,13 @@ return (externalSerials || []).filter(s =>
                     value={sn}
                     onChange={(e) => setSn(e.target.value)}
                     placeholder="Nhập serial..."
-                    className="w-full border shadow-sm border-slate-200 rounded-lg pl-10 pr-4 py-3 focus:border-blue-500 outline-none block font-mono text-base font-bold transition-all uppercase"
+                    className="w-full border shadow-sm border-slate-200 rounded-lg pl-10 pr-4 py-3 focus:border-blue-500 outline-none block font-mono md:text-xl text-base font-bold transition-all uppercase"
                   />
                 </div>
               </div>
 
               <div className="relative">
-                <label className="block text-sm font-bold text-slate-700 mb-1">Khách hàng</label>
+                <label className="block md:text-base text-sm font-bold text-slate-700 mb-1">Khách hàng</label>
                 <div className="relative">
                   <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input 
@@ -335,7 +335,7 @@ return (externalSerials || []).filter(s =>
                     }}
                     onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
                     placeholder="Tên khách hàng..."
-                    className="w-full border shadow-sm border-slate-200 rounded-lg pl-10 pr-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm transition-all"
+                    className="w-full border shadow-sm border-slate-200 rounded-lg pl-10 pr-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none md:text-base text-sm transition-all"
                   />
                 </div>
                 {showCustomerDropdown && (
@@ -349,14 +349,14 @@ return (externalSerials || []).filter(s =>
                           setShowCustomerDropdown(false);
                         }}
                       >
-                        <p className="font-bold text-sm text-slate-800">{c.name}</p>
-                        <p className="text-xs text-slate-500">{c.phone}</p>
+                        <p className="font-bold md:text-base text-sm text-slate-800">{c.name}</p>
+                        <p className="md:text-sm text-xs text-slate-500">{c.phone}</p>
                       </div>
                     ))}
                     {customerSuggestions.length === 0 && customer.trim() !== '' && (
                       <div className="p-2">
                         <button 
-                          className="w-full py-2 px-3 flex items-center justify-center gap-2 text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors text-xs font-bold"
+                          className="w-full py-2 px-3 flex items-center justify-center gap-2 text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors md:text-sm text-xs font-bold"
                           onClick={(e) => {
                             e.preventDefault();
                             setIsCustomerModalOpen(true);
@@ -372,18 +372,18 @@ return (externalSerials || []).filter(s =>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Nguồn gốc</label>
+                <label className="block md:text-base text-sm font-bold text-slate-700 mb-1">Nguồn gốc</label>
                 <input 
                   type="text" 
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
                   placeholder="Ví dụ: Shopee, Lazada, Tinh Châu..."
-                  className="w-full border shadow-sm border-slate-200 rounded-lg px-4 py-3 focus:border-blue-500 outline-none text-sm transition-all"
+                  className="w-full border shadow-sm border-slate-200 rounded-lg px-4 py-3 focus:border-blue-500 outline-none md:text-base text-sm transition-all"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Ghi chú</label>
+                <label className="block md:text-base text-sm font-bold text-slate-700 mb-1">Ghi chú</label>
                 <div className="relative">
                   <FileText size={18} className="absolute left-3 top-3 text-slate-400" />
                   <textarea 
@@ -391,7 +391,7 @@ return (externalSerials || []).filter(s =>
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Ghi chú thêm (khả năng đổi trả, bảo hành)..."
                     rows={3}
-                    className="w-full border shadow-sm border-slate-200 rounded-lg pl-10 pr-4 py-3 focus:border-blue-500 outline-none text-sm transition-all resize-none"
+                    className="w-full border shadow-sm border-slate-200 rounded-lg pl-10 pr-4 py-3 focus:border-blue-500 outline-none md:text-base text-sm transition-all resize-none"
                   />
                 </div>
               </div>
@@ -400,13 +400,13 @@ return (externalSerials || []).filter(s =>
             <div className="p-5 md:p-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end gap-3 bg-slate-50">
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 border-2 border-slate-200 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors text-sm"
+                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 border-2 border-slate-200 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors md:text-base text-sm"
               >
                 Hủy
               </button>
               <button 
                 onClick={handleSave}
-                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-sm shadow-sm flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors md:text-base text-sm shadow-sm flex items-center justify-center gap-2"
               >
                 <Database size={18} /> {editId ? 'Cập nhật' : 'Lưu Serial'}
               </button>
@@ -418,33 +418,33 @@ return (externalSerials || []).filter(s =>
       {isCustomerModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden p-8">
-            <h3 className="text-lg font-bold text-slate-800 mb-4 tracking-tight">Thêm khách hàng</h3>
+            <h3 className="md:text-xl text-lg font-bold text-slate-800 mb-4 tracking-tight">Thêm khách hàng</h3>
             <div className="space-y-4">
               <input 
                 type="text" 
                 placeholder="Tên khách hàng *" 
                 id="new-customer-name"
                 defaultValue={customer}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
                 autoFocus
               />
               <input 
                 type="text" 
                 placeholder="Số điện thoại *" 
                 id="new-customer-phone"
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
               />
               <input 
                 type="text" 
                 placeholder="Địa chỉ" 
                 id="new-customer-address"
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-500 focus:bg-white transition-colors"
               />
             </div>
             <div className="flex gap-3 mt-6">
               <button 
                 onClick={() => setIsCustomerModalOpen(false)}
-                className="flex-1 py-3 bg-white text-slate-600 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm"
+                className="flex-1 py-3 bg-white text-slate-600 border border-slate-200 rounded-lg md:text-base text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm"
               >
                 Hủy
               </button>
@@ -468,7 +468,7 @@ return (externalSerials || []).filter(s =>
                      alert('Vui lòng nhập tên và số điện thoại');
                   }
                 }}
-                className="flex-1 py-3 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                className="flex-1 py-3 bg-blue-600 text-white rounded-lg md:text-base text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm"
               >
                 Lưu
               </button>
@@ -479,15 +479,15 @@ return (externalSerials || []).filter(s =>
       {/* External Serial Detail Modal */}
       {selectedSerialDetail && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 p-0 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-slate-50 w-full max-w-4xl h-full md:h-[90vh] md:rounded-2xl rounded-none shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-slate-50 w-full max-w-6xl h-full md:h-[90vh] md:rounded-2xl rounded-none shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
             <div className="bg-white p-6 border-b border-slate-200 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                   <Package size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-800 tracking-tighter uppercase">{selectedSerialDetail.sn}</h3>
-                  <p className="text-xs text-slate-500 font-bold tracking-widest">{selectedSerialDetail.product}</p>
+                  <h3 className="md:text-2xl text-xl font-black text-slate-800 tracking-tighter uppercase">{selectedSerialDetail.sn}</h3>
+                  <p className="md:text-sm text-xs text-slate-500 font-bold tracking-widest">{selectedSerialDetail.product}</p>
                 </div>
               </div>
               <button 
@@ -502,13 +502,13 @@ return (externalSerials || []).filter(s =>
             <div className="bg-white border-b border-slate-200 flex shrink-0">
               <button 
                 onClick={() => setActiveDetailTab('info')}
-                className={`flex-1 py-4 px-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeDetailTab === 'info' ? 'border-blue-600 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-4 px-4 flex items-center justify-center gap-2 md:text-sm text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeDetailTab === 'info' ? 'border-blue-600 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
               >
                 <FileText size={16} /> Thông tin
               </button>
               <button 
                 onClick={() => setActiveDetailTab('warranty')}
-                className={`flex-1 py-4 px-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeDetailTab === 'warranty' ? 'border-blue-600 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-4 px-4 flex items-center justify-center gap-2 md:text-sm text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeDetailTab === 'warranty' ? 'border-blue-600 text-blue-600 bg-blue-50/30' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
               >
                 <ShieldCheck size={16} /> Bảo hành / sửa chữa
               </button>
@@ -521,20 +521,20 @@ return (externalSerials || []).filter(s =>
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-                        <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Thông tin thiết bị</h4>
+                        <h4 className="md:text-sm text-[11px] font-black text-slate-400 uppercase tracking-widest">Thông tin thiết bị</h4>
                       </div>
                       <div className="space-y-4">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Sản phẩm</span>
-                          <span className="text-sm text-slate-800 font-black">{selectedSerialDetail.product}</span>
+                          <span className="md:text-xs text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Sản phẩm</span>
+                          <span className="md:text-base text-sm text-slate-800 font-black">{selectedSerialDetail.product}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Serial Number</span>
-                          <span className="text-sm text-blue-600 font-mono font-black bg-blue-50 px-2 py-1 rounded inline-block w-fit border border-blue-100">{selectedSerialDetail.sn}</span>
+                          <span className="md:text-xs text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Serial Number</span>
+                          <span className="md:text-base text-sm text-blue-600 font-mono font-black bg-blue-50 px-2 py-1 rounded inline-block w-fit border border-blue-100">{selectedSerialDetail.sn}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Nguồn gốc</span>
-                          <span className="text-sm text-slate-800 font-bold">{selectedSerialDetail.source || '---'}</span>
+                          <span className="md:text-xs text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Nguồn gốc</span>
+                          <span className="md:text-base text-sm text-slate-800 font-bold">{selectedSerialDetail.source || '---'}</span>
                         </div>
                       </div>
                     </div>
@@ -542,26 +542,26 @@ return (externalSerials || []).filter(s =>
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
-                        <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Liên kết khách hàng</h4>
+                        <h4 className="md:text-sm text-[11px] font-black text-slate-400 uppercase tracking-widest">Liên kết khách hàng</h4>
                       </div>
                       <div className="space-y-4">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Khách hàng</span>
-                          <span className="text-sm text-slate-800 font-black flex items-center gap-2">
+                          <span className="md:text-xs text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Khách hàng</span>
+                          <span className="md:text-base text-sm text-slate-800 font-black flex items-center gap-2">
                              <User size={14} className="text-slate-400" />
                              {selectedSerialDetail.customer || 'Chưa gán khách hàng'}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Ngày ghi nhận</span>
-                          <span className="text-sm text-slate-800 font-bold flex items-center gap-2">
+                          <span className="md:text-xs text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Ngày ghi nhận</span>
+                          <span className="md:text-base text-sm text-slate-800 font-bold flex items-center gap-2">
                              <Calendar size={14} className="text-slate-400" />
                              {selectedSerialDetail.date}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Người tạo</span>
-                          <span className="text-sm text-slate-400 font-bold italic">{selectedSerialDetail.createdBy || 'Hệ thống'}</span>
+                          <span className="md:text-xs text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Người tạo</span>
+                          <span className="md:text-base text-sm text-slate-400 font-bold italic">{selectedSerialDetail.createdBy || 'Hệ thống'}</span>
                         </div>
                       </div>
                     </div>
@@ -570,9 +570,9 @@ return (externalSerials || []).filter(s =>
                   <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
-                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Ghi chú chi tiết</h4>
+                      <h4 className="md:text-sm text-[11px] font-black text-slate-400 uppercase tracking-widest">Ghi chú chi tiết</h4>
                     </div>
-                    <div className="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 min-h-[80px] italic leading-relaxed">
+                    <div className="md:text-base text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 min-h-[80px] italic leading-relaxed">
                       {selectedSerialDetail.note || 'Không có ghi chú nào cho serial này.'}
                     </div>
                   </div>
@@ -605,14 +605,14 @@ return (externalSerials || []).filter(s =>
                     return (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Lịch sử bảo hành ({history.length})</h4>
+                           <h4 className="md:text-sm text-[11px] font-black text-slate-400 uppercase tracking-widest">Lịch sử bảo hành ({history.length})</h4>
                         </div>
                         {history.length === 0 ? (
                           <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center">
                             <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                               <Wrench size={28} />
                             </div>
-                            <p className="text-slate-400 italic text-sm font-medium">Serial này chưa có lịch sử bảo hành/sửa chữa nào.</p>
+                            <p className="text-slate-400 italic md:text-base text-sm font-medium">Serial này chưa có lịch sử bảo hành/sửa chữa nào.</p>
                           </div>
                         ) : (
                           history.map(record => (
@@ -627,17 +627,17 @@ return (externalSerials || []).filter(s =>
                                   </div>
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-2">
-                                      <span className="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded italic whitespace-nowrap">#{record.id}</span>
-                                      <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border ${getStatusStyle(record.status)} tracking-widest whitespace-nowrap`}>
+                                      <span className="md:text-xs text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded italic whitespace-nowrap">#{record.id}</span>
+                                      <span className={`md:text-xs text-[9px] font-black px-2.5 py-0.5 rounded-full border ${getStatusStyle(record.status)} tracking-widest whitespace-nowrap`}>
                                         {getStatusText(record.status)}
                                       </span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                                      <div className="flex items-center gap-1.5 md:text-sm text-[10px] text-slate-500 font-bold uppercase tracking-tight">
                                         <Calendar size={12} />
                                         {record.date}
                                       </div>
-                                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                                      <div className="flex items-center gap-1.5 md:text-sm text-[10px] text-slate-500 font-bold uppercase tracking-tight">
                                         <User size={12} />
                                         {record.customerName}
                                       </div>
@@ -646,16 +646,16 @@ return (externalSerials || []).filter(s =>
                                 </div>
                                 <div className="flex flex-col justify-between sm:items-end gap-2 shrink-0 sm:pl-4 sm:border-l border-slate-100">
                                   <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">VẤN ĐỀ / LỖI:</p>
-                                    <p className="text-xs text-slate-700 font-black leading-relaxed">{record.issue}</p>
+                                    <p className="md:text-xs text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">VẤN ĐỀ / LỖI:</p>
+                                    <p className="md:text-sm text-xs text-slate-700 font-black leading-relaxed">{record.issue}</p>
                                   </div>
                                   <div className="flex items-center justify-between sm:justify-end gap-4 mt-auto">
                                     <div className="text-right">
-                                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1 italic">Chi phí</p>
-                                      <p className="text-sm font-black text-rose-600">{formatNumber(record.cost)}đ</p>
+                                      <p className="md:text-xs text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1 italic">Chi phí</p>
+                                      <p className="md:text-base text-sm font-black text-rose-600">{formatNumber(record.cost)}đ</p>
                                     </div>
                                     {record.transferId && (
-                                       <div className="flex items-center gap-1 text-[9px] font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase italic tracking-tighter">
+                                       <div className="flex items-center gap-1 md:text-xs text-[9px] font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase italic tracking-tighter">
                                          <Send size={10} /> Đã gửi tuyến
                                        </div>
                                     )}

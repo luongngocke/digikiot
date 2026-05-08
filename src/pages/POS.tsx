@@ -564,8 +564,8 @@ return (
       {showDraftPrompt && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Đơn hàng chưa hoàn thành</h3>
-            <p className="text-slate-500 mb-6 text-sm">Có một đơn hàng chưa hoàn thành, bạn có muốn tiếp tục không?</p>
+            <h3 className="md:text-xl text-lg font-bold text-slate-800 mb-2">Đơn hàng chưa hoàn thành</h3>
+            <p className="text-slate-500 mb-6 md:text-base text-sm">Có một đơn hàng chưa hoàn thành, bạn có muốn tiếp tục không?</p>
             <div className="flex gap-3">
               <button 
                 onClick={() => {
@@ -586,13 +586,13 @@ return (
                   setPOSDraft(null);
                   setShowDraftPrompt(false);
                 }}
-                className="flex-1 py-2.5 border border-slate-200 rounded-lg text-slate-600 font-bold text-sm hover:bg-slate-50"
+                className="flex-1 py-2.5 border border-slate-200 rounded-lg text-slate-600 font-bold md:text-base text-sm hover:bg-slate-50 transition-colors"
               >
                 Bỏ qua
               </button>
               <button 
                 onClick={() => setShowDraftPrompt(false)}
-                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700"
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-bold md:text-base text-sm hover:bg-blue-700 transition-colors"
               >
                 Tiếp tục
               </button>
@@ -1162,22 +1162,21 @@ return (
           )}
           <button 
             onClick={() => navigate(-1)} 
-            className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95 shadow-lg shadow-red-100 shrink-0"
+            className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95 shadow-lg shadow-red-100 shrink-0 md:hidden"
           >
             Đóng
           </button>
         </div>
       </div>
 
-      {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-8 text-center animate-in zoom-in duration-300">
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <CheckCircle size={48} />
             </div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-2">Thành công!</h3>
-            <p className="text-slate-500 mb-8 font-medium">Hóa đơn <span className="font-bold text-blue-600">{showSuccessModal.id}</span> đã được lưu vào hệ thống.</p>
+            <h3 className="md:text-3xl text-2xl font-bold text-slate-800 mb-2">Thành công!</h3>
+            <p className="text-slate-500 mb-8 md:text-lg font-medium">Hóa đơn <span className="font-bold text-blue-600">{showSuccessModal.id}</span> đã được lưu vào hệ thống.</p>
             
             <div className="flex flex-col gap-3">
               <button 
@@ -1217,13 +1216,13 @@ return (
                   }
                   setShowSuccessModal(null);
                 }}
-                className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-blue-600 text-white font-bold md:text-lg rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
               >
                 <Printer size={20} /> In hóa đơn
               </button>
               <button 
                 onClick={() => setShowSuccessModal(null)}
-                className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all"
+                className="w-full py-4 bg-slate-100 text-slate-600 font-bold md:text-lg rounded-xl hover:bg-slate-200 transition-all"
               >
                 Tiếp tục bán hàng
               </button>
@@ -1240,8 +1239,8 @@ return (
               <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FileText size={32} />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">Xác nhận cập nhật</h3>
-              <p className="text-sm text-slate-500 mb-6">
+              <h3 className="md:text-2xl text-xl font-bold text-slate-800 mb-2">Xác nhận cập nhật</h3>
+              <p className="md:text-base text-sm text-slate-500 mb-6 font-medium">
                 Bạn đang sửa hóa đơn <span className="font-bold text-blue-600">{currentTab.editingInvoiceId}</span>. 
                 Hệ thống sẽ cập nhật lại tồn kho, số serial và công nợ khách hàng. Tiếp tục?
               </p>
@@ -1249,14 +1248,14 @@ return (
               <div className="flex gap-3">
                 <button 
                   onClick={() => setCheckoutConfirmModal(null)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold md:text-lg rounded-xl hover:bg-slate-200 transition-colors"
                 >
                   Hủy bỏ
                 </button>
                 <button 
                   onClick={() => handleCheckout(false)}
                   disabled={isCheckingOut}
-                  className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-blue-600 text-white font-bold md:text-lg rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                 >
                   {isCheckingOut ? 'Đang lưu...' : 'Đồng ý'}
                 </button>
@@ -1269,16 +1268,16 @@ return (
       {/* Serial Selection Modal */}
       {isSerialModalOpen && activeSerialProduct && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800 tracking-tighter">Chọn IMEI/Serial</h3>
-              <button onClick={() => setIsSerialModalOpen(false)} className="w-8 h-8 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-200 flex items-center justify-center">
+          <div className="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+              <h3 className="md:text-xl text-lg font-bold text-slate-800 tracking-tighter">Chọn IMEI/Serial</h3>
+              <button onClick={() => setIsSerialModalOpen(false)} className="w-8 h-8 bg-white shadow-sm border border-slate-100 text-slate-400 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors">
                 <X size={18} />
               </button>
             </div>
             <div className="p-6">
-              <p className="text-xs font-bold text-blue-600 mb-4 tracking-tighter">{activeSerialProduct.name}</p>
-              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto">
+              <p className="md:text-sm text-xs font-bold text-blue-600 mb-4 tracking-tighter">{activeSerialProduct.name}</p>
+              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
                 {serials
                   .filter(s => s.prodId === activeSerialProduct.id && s.status !== 'SOLD' && !cart.find(item => item.id === activeSerialProduct.id)?.serials?.includes(s.sn))
                   .map((s, sIdx) => (
@@ -1288,15 +1287,15 @@ return (
                         addToCart(activeSerialProduct, s.sn);
                         setIsSerialModalOpen(false);
                       }}
-                      className="p-4 border border-slate-200 rounded-lg hover:border-blue-400 text-left transition-all flex justify-between items-center"
+                      className="p-4 border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50/30 text-left transition-all flex justify-between items-center group"
                     >
-                      <span className="font-mono font-bold text-slate-800 text-xs">{s.sn}</span>
-                      <Plus size={16} className="text-blue-600" />
+                      <span className="font-mono font-bold text-slate-800 md:text-base text-xs">{s.sn}</span>
+                      <Plus size={16} className="text-blue-600 group-hover:scale-110 transition-transform" />
                     </button>
                   ))
                 }
                 {serials.filter(s => s.prodId === activeSerialProduct.id && s.status !== 'SOLD' && !cart.find(item => item.id === activeSerialProduct.id)?.serials?.includes(s.sn)).length === 0 && (
-                  <p className="text-center text-slate-400 text-xs py-10 font-bold uppercase tracking-widest">Hết IMEI khả dụng trong kho</p>
+                  <p className="text-center text-slate-400 md:text-sm text-xs py-10 font-bold uppercase tracking-widest italic opacity-60">Hết IMEI khả dụng trong kho</p>
                 )}
               </div>
             </div>
@@ -1450,27 +1449,36 @@ return (
     {/* Add Customer Modal */}
       {isCustomerModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden p-8">
-            <h3 className="text-lg font-bold text-slate-800 mb-4 tracking-tight">Thêm khách hàng</h3>
-            <div className="space-y-4">
-              <input 
-                id="new-cust-name"
-                type="text" 
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400 shadow-inner" 
-                placeholder="Tên khách hàng..." 
-              />
-              <input 
-                id="new-cust-phone"
-                type="text" 
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400 shadow-inner" 
-                placeholder="Số điện thoại..." 
-              />
-              <input 
-                id="new-cust-address"
-                type="text" 
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400 shadow-inner" 
-                placeholder="Địa chỉ..." 
-              />
+          <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden p-8">
+            <h3 className="md:text-xl text-lg font-bold text-slate-800 mb-6 tracking-tight">Thêm khách hàng</h3>
+            <div className="space-y-5">
+              <div className="space-y-1">
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên khách hàng</label>
+                <input 
+                  id="new-cust-name"
+                  type="text" 
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 shadow-inner transition-colors" 
+                  placeholder="Họ và tên..." 
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Số điện thoại</label>
+                <input 
+                  id="new-cust-phone"
+                  type="text" 
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 shadow-inner transition-colors" 
+                  placeholder="Nhập SĐT..." 
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Địa chỉ</label>
+                <input 
+                  id="new-cust-address"
+                  type="text" 
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 shadow-inner transition-colors" 
+                  placeholder="Nhập địa chỉ..." 
+                />
+              </div>
               <button 
                 onClick={() => {
                   const name = (document.getElementById('new-cust-name') as HTMLInputElement).value;
@@ -1483,13 +1491,13 @@ return (
                     setIsCustomerModalOpen(false);
                   }
                 }}
-                className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold shadow-md shadow-blue-200 text-[11px] tracking-wide mt-2 active:scale-95 transition-all"
+                className="w-full bg-blue-600 text-white py-4 rounded-lg font-bold shadow-lg shadow-blue-200 md:text-sm text-[11px] tracking-wide mt-2 active:scale-95 transition-all uppercase"
               >
                 Lưu thông tin
               </button>
               <button 
                 onClick={() => setIsCustomerModalOpen(false)}
-                className="w-full bg-slate-100 text-slate-600 py-3.5 rounded-lg font-semibold text-[11px] tracking-wide mt-1"
+                className="w-full bg-slate-100 text-slate-600 py-3.5 rounded-lg font-bold md:text-sm text-[11px] tracking-wide mt-1 uppercase transition-colors hover:bg-slate-200"
               >
                 Hủy
               </button>
@@ -1501,41 +1509,41 @@ return (
       {/* Quick Add Product Modal */}
       {isQuickAddModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-slate-800 tracking-tight">Thêm nhanh sản phẩm</h3>
-              <button onClick={handleCloseQuickAddModal} className="text-slate-400 hover:text-slate-600">
+          <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="md:text-xl text-lg font-bold text-slate-800 tracking-tight">Thêm nhanh sản phẩm</h3>
+              <button onClick={handleCloseQuickAddModal} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 bg-slate-50 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên sản phẩm</label>
+                <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên sản phẩm</label>
                 <input 
                   type="text" 
                   value={quickAddName}
                   onChange={(e) => setQuickAddName(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400" 
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 transition-colors" 
                   placeholder="Tên sản phẩm..." 
                 />
               </div>
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Mã hàng hóa</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Mã hàng hóa</label>
                   <input 
                     type="text" 
                     value={quickAddId}
                     onChange={(e) => setQuickAddId(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400" 
+                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 transition-colors" 
                     placeholder="Tự động" 
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Loại hàng</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Loại hàng</label>
                   <select 
                     value={quickAddIsService ? 'service' : 'product'}
                     onChange={(e) => setQuickAddIsService(e.target.value === 'service')}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400"
+                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 transition-colors appearance-none cursor-pointer"
                   >
                     <option value="product">Hàng hóa</option>
                     <option value="service">Dịch vụ</option>
@@ -1544,24 +1552,24 @@ return (
               </div>
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá bán</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá bán</label>
                   <NumericFormat 
                     value={quickAddPrice}
                     onValueChange={(values) => setQuickAddPrice(values.formattedValue)}
                     thousandSeparator="."
                     decimalSeparator=","
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400" 
+                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 transition-colors" 
                     placeholder="0" 
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá vốn</label>
+                  <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá vốn</label>
                   <NumericFormat 
                     value={quickAddCost}
                     onValueChange={(values) => setQuickAddCost(values.formattedValue)}
                     thousandSeparator="."
                     decimalSeparator=","
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400" 
+                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 transition-colors" 
                     placeholder="0" 
                   />
                 </div>
@@ -1570,13 +1578,13 @@ return (
               {!quickAddIsService && (
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tồn kho ban đầu</label>
+                    <label className="md:text-xs text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tồn kho ban đầu</label>
                     <NumericFormat 
                       value={quickAddStock}
                       onValueChange={(values) => setQuickAddStock(values.formattedValue)}
                       thousandSeparator="."
                       decimalSeparator=","
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-400" 
+                      className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-lg md:text-base text-sm font-semibold outline-none focus:border-blue-400 transition-colors" 
                       placeholder="0" 
                       disabled={quickAddHasSerial}
                     />
@@ -1595,14 +1603,14 @@ return (
                           if (e.target.checked) setQuickAddStock('0');
                         }}
                       />
-                      <span className="text-xs font-bold text-slate-700">Quản lý Serial/IMEI</span>
+                      <span className="md:text-sm text-xs font-bold text-slate-700">Quản lý Serial/IMEI</span>
                     </label>
                   </div>
                 </div>
               )}
               <button 
                 onClick={handleQuickAdd}
-                className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all active:scale-95 mt-2"
+                className="w-full bg-blue-600 text-white py-4 rounded-lg font-bold md:text-lg text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 mt-2 uppercase tracking-wide"
               >
                 Lưu và Thêm vào giỏ
               </button>
@@ -1732,7 +1740,7 @@ return (
             </button>
             <button 
               onClick={() => setIsMobileCheckoutOpen(false)}
-              className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95 shadow-lg shadow-red-100"
+              className="w-full py-3 bg-[#991b1b] text-white font-black rounded-lg uppercase text-[10px] tracking-widest hover:bg-[#7f1d1d] transition-colors active:scale-95 shadow-lg shadow-red-100 md:hidden"
             >
               Đóng
             </button>
